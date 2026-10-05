@@ -127,6 +127,92 @@
   50% { opacity: 1; }
 }
 
+/* ---- Exaggerated face details ---------------------------------------------------------- */
+
+/* Very worried: the whole head trembles. */
+.sg-tremble {
+  animation: sg-tremble 0.18s linear infinite;
+}
+@keyframes sg-tremble {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-3px, 1px); }
+  50% { transform: translate(2px, -2px); }
+  75% { transform: translate(-1px, 2px); }
+}
+
+.sg-twinkle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sg-twinkle 1.4s ease-in-out infinite;
+}
+@keyframes sg-twinkle {
+  0%, 100% { transform: scale(0.6) rotate(0deg); opacity: 0.5; }
+  50% { transform: scale(1.15) rotate(20deg); opacity: 1; }
+}
+
+.sg-zz {
+  animation: sg-zz 2.7s ease-in infinite;
+}
+@keyframes sg-zz {
+  0% { transform: translate(0, 10px); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(25px, -50px); opacity: 0; }
+}
+
+.sg-spin {
+  transform-box: fill-box;
+  transform-origin: 40% 50%;
+  animation: sg-spin 1.6s linear infinite;
+}
+@keyframes sg-spin {
+  to { transform: rotate(360deg); }
+}
+
+.sg-yawn {
+  transform-box: fill-box;
+  transform-origin: center top;
+  animation: sg-yawn 4s ease-in-out infinite;
+}
+@keyframes sg-yawn {
+  0%, 100% { transform: scaleY(0.7); }
+  40%, 60% { transform: scaleY(1.15); }
+}
+
+.sg-sweat-slide { animation: sg-sweat-slide 2.4s ease-in infinite; }
+@keyframes sg-sweat-slide {
+  0% { transform: translateY(-10px); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(30px); opacity: 0; }
+}
+.sg-sweat-fly { animation: sg-sweat-fly 1.2s ease-out infinite; }
+.sg-sweat-fly-left { animation: sg-sweat-fly-left 1.2s ease-out 0.4s infinite; }
+@keyframes sg-sweat-fly {
+  0% { transform: translate(0, 0); opacity: 1; }
+  100% { transform: translate(30px, -25px); opacity: 0; }
+}
+@keyframes sg-sweat-fly-left {
+  0% { transform: translate(0, 0); opacity: 1; }
+  100% { transform: translate(-30px, -25px); opacity: 0; }
+}
+
+.sg-drool {
+  transform-box: fill-box;
+  transform-origin: top;
+  animation: sg-drool 3s ease-in-out infinite;
+}
+@keyframes sg-drool {
+  0%, 100% { transform: scaleY(0.6); }
+  50% { transform: scaleY(1.1); }
+}
+
+/* The soul drifts out of the body, and comes back for another try. */
+.sg-soul { animation: sg-soul 4s ease-in-out infinite; }
+@keyframes sg-soul {
+  0% { transform: translate(40px, 60px); opacity: 0; }
+  30% { opacity: 0.9; }
+  100% { transform: translate(0, -40px); opacity: 0; }
+}
+
 .sg-crossfade {
   animation: sg-fade-in 0.7s ease-in-out both;
 }
@@ -192,7 +278,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .sg-bob, .sg-growl-shake, .sg-icon-pulse, .sg-smell-wisp, .sg-smell-cloud,
-  .sg-fly, .sg-hop, .sg-hop-photo, .sg-happy-glow, .sg-breathe, .sg-haze, .sg-sweat, .sg-crossfade {
+  .sg-fly, .sg-hop, .sg-hop-photo, .sg-happy-glow, .sg-breathe, .sg-haze, .sg-sweat, .sg-crossfade,
+  .sg-tremble, .sg-twinkle, .sg-spin, .sg-yawn, .sg-sweat-slide, .sg-sweat-fly, .sg-sweat-fly-left, .sg-drool,
+  .sg-zz, .sg-soul {
     animation: none;
   }
   .sg-growl-lines {

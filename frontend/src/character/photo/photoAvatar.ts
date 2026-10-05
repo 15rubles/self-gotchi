@@ -118,5 +118,8 @@ const generatedFile = Object.values(generatedJson)[0] as GeneratedFile | undefin
 /** AI-generated frames of the user, when `npm run avatar:generate` has been run. */
 export const generatedManifest: AssetManifest | null = generatedFile ? buildGenerated(generatedFile) : null
 
-/** Generated frames, else the single local photo, else the illustrated placeholders. */
-export const defaultManifest: AssetManifest = generatedManifest ?? photoManifest ?? placeholderManifest
+/**
+ * Generated frames when present, otherwise the illustrated (exaggerated chibi) placeholders.
+ * The single-photo look is opt-in (/gallery?art=photo); the user preferred the drawn style.
+ */
+export const defaultManifest: AssetManifest = generatedManifest ?? placeholderManifest
