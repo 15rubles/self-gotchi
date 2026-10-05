@@ -27,6 +27,14 @@ npm run lint
 ```
 On this machine the JDK is not on PATH: `export JAVA_HOME=~/.jdks/corretto-24.0.2` first (it compiles with `--release 21`).
 
+Windows PowerShell 5.1 equivalents (no `&&`, no `export`; run one command per line):
+```powershell
+$env:JAVA_HOME = "$env:USERPROFILE\.jdks\corretto-24.0.2"   # or set once: [Environment]::SetEnvironmentVariable('JAVA_HOME', "$env:USERPROFILE\.jdks\corretto-24.0.2", 'User')
+cd backend
+.\mvnw.cmd test
+.\mvnw.cmd spring-boot:run
+```
+
 ## Hard rules
 - The State Engine lives in `app.selfgotchi.state` as plain Java with **zero Spring, JPA or Jackson imports**
   (enforced by an ArchUnit test). Pure, deterministic, no I/O:
