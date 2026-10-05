@@ -143,7 +143,9 @@ async function generate(prompt, references) {
       body: JSON.stringify(body),
     })
     const text = await response.text()
-    if ((response.status === 429 || response.status >= 500) && attempt < 5) {
+    // A daily quota (e.g. "limit: 0 requests per day" on the free tier) won't recover by waiting.
+    const dailyQuota = response.status === 429 && /per day/i.test(text)
+    if ((response.status === 429 || response.status >= 500) && !dailyQuota && attempt < 5) {
       const wait = 2000 * 2 ** attempt
       console.warn(`  HTTP ${response.status}, retrying in ${wait / 1000}s`)
       await sleep(wait)
