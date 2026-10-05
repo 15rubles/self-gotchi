@@ -1,0 +1,54 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { apiFetch } from './client'
+import type { CompleteResponse, Me, StateResponse } from './types'
+
+export const stateKey = ['state'] as const
+
+/** Current state, refetched every 60 s while the tab is visible (states change on the clock). */
+export function useCharacterState() {
+  return useQuery({
+    queryKey: stateKey,
+    queryFn: () => apiFetch<StateResponse>('state'),
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+  })
+}
+
+/** State at another moment, for previews. Disabled while `at` is undefined. */
+export function useStateAt(at: string | undefined) {
+  return useQuery({
+    queryKey: [...stateKey, 'at', at],
+    queryFn: () => apiFetch<StateResponse>(`state?at=${encodeURIComponent(at!)}`),
+    enabled: at !== undefined,
+    staleTime: 30_000,
+  })
+}
+
+export function useMe() {
+  return useQuery({ queryKey: ['me'], queryFn: () => apiFetch<Me>('me'), staleTime: Infinity })
+}
+
+export function useCompleteTask() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (taskId: number) =>
+      apiFetch<CompleteResponse>(`tasks/${taskId}/complete`, { method: 'POST' }),
+    onSuccess: (response) => {
+      client.setQueryData(stateKey, response.state)
+      void client.invalidateQueries({ queryKey: ['history'] })
+    },
+  })
+}
+
+export function useUndoCompletion() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (completionId: number) =>
+      apiFetch<StateResponse>(`completions/${completionId}`, { method: 'DELETE' }),
+    onSuccess: (state) => {
+      client.setQueryData(stateKey, state)
+      void client.invalidateQueries({ queryKey: ['history'] })
+    },
+  })
+}

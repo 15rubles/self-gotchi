@@ -120,6 +120,27 @@ class StateEngineTest {
         }
 
         @Test
+        void slotsBeforeCreationDoNotExistThatDay() {
+            Scenario s = new Scenario(BERLIN, "2026-10-05T12:30");
+            long teeth = s.teeth(); // the 10:00 slot was before creation
+
+            TaskEvaluation eval = s.task(teeth, "2026-10-05T12:40");
+            assertThat(eval.status()).isEqualTo(TaskStatus.UPCOMING);
+            assertThat(eval.target()).isEqualTo(1);
+            assertThat(eval.dueAt()).isEqualTo(s.t("2026-10-05T23:30"));
+            assertThat(s.task(teeth, "2026-10-06T08:00").target()).isEqualTo(2);
+        }
+
+        @Test
+        void allSlotsBeforeCreation_isOffThatDay() {
+            Scenario s = new Scenario(BERLIN, "2026-10-05T21:30");
+            long eat = s.eat();
+
+            assertThat(s.task(eat, "2026-10-05T22:00").status()).isEqualTo(TaskStatus.OFF);
+            assertThat(s.task(eat, "2026-10-06T09:00").status()).isEqualTo(TaskStatus.UPCOMING);
+        }
+
+        @Test
         void missedSlotsAccumulateAndCapAt3() {
             Scenario s = berlin();
             long eat = s.eat();

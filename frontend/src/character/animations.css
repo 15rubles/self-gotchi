@@ -1,0 +1,139 @@
+/* Character animations (DESIGN.md "Animations"): CSS-first. */
+
+/* Idle breathing bob, always on. */
+.sg-bob {
+  animation: sg-bob 3.2s ease-in-out infinite;
+}
+@keyframes sg-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1.2%); }
+}
+
+/* Motivation severity 1: slouch. */
+.sg-slouch {
+  transform: translateY(1.5%) rotate(-2deg) scaleY(0.97);
+  transform-origin: 50% 88%;
+  transition: transform 0.6s ease;
+}
+
+/* Motivation severity 3: grey sweatpants tint on the body. */
+.sg-sweatpants {
+  filter: grayscale(0.75) brightness(0.95);
+}
+
+/* Belly growl: a short shake every 9 s, growl lines shown during it. */
+.sg-growl-shake {
+  animation: sg-shake 9s ease-in-out infinite;
+}
+@keyframes sg-shake {
+  0%, 6%, 100% { transform: translateX(0); }
+  1% { transform: translateX(-1%); }
+  2% { transform: translateX(1%); }
+  3% { transform: translateX(-1%); }
+  4% { transform: translateX(0.8%); }
+  5% { transform: translateX(-0.5%); }
+}
+.sg-growl-lines {
+  animation: sg-growl-lines 9s ease-in-out infinite;
+}
+@keyframes sg-growl-lines {
+  0% { opacity: 0; }
+  1%, 8% { opacity: 1; }
+  11%, 100% { opacity: 0; }
+}
+
+/* Worried icon pulse (severity 3). */
+.sg-icon-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sg-pulse 1.1s ease-in-out infinite;
+}
+@keyframes sg-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.18); }
+}
+
+/* Mouth smell. */
+.sg-smell-wisp {
+  animation: sg-wisp 2.2s ease-in-out infinite;
+}
+@keyframes sg-wisp {
+  0% { transform: translateY(10px); opacity: 0; }
+  30% { opacity: 0.75; }
+  100% { transform: translateY(-50px); opacity: 0; }
+}
+.sg-smell-cloud {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sg-cloud 3s ease-in-out infinite;
+}
+@keyframes sg-cloud {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.07) translateY(-6px); }
+}
+
+/* Flies orbit their anchor (the parent group's origin). */
+.sg-fly {
+  transform-origin: 0 0;
+  animation: sg-fly 2s linear infinite;
+}
+@keyframes sg-fly {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Task completed: hop + sparkle burst, then the effect fades out. */
+.sg-hop {
+  animation: sg-hop 0.6s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes sg-hop {
+  0% { transform: translateY(0); }
+  40% { transform: translateY(-7%); }
+  100% { transform: translateY(0); }
+}
+.sg-sparkle {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+  animation: sg-sparkle 0.9s ease-out forwards;
+}
+@keyframes sg-sparkle {
+  from { transform: translate(0, 0) scale(0.2); opacity: 1; }
+  to { transform: translate(var(--dx), var(--dy)) scale(1) rotate(90deg); opacity: 0; }
+}
+
+.sg-fade-in {
+  animation: sg-fade-in 0.4s ease-out;
+}
+.sg-fade-out {
+  animation: sg-fade-out 0.7s ease-in forwards;
+}
+@keyframes sg-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes sg-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Happy state with an active streak: soft warm glow. */
+.sg-happy-glow {
+  background: radial-gradient(circle at 50% 45%, rgba(255, 236, 140, 0.35), transparent 60%);
+  animation: sg-glow 2.5s ease-in-out infinite;
+}
+@keyframes sg-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sg-bob, .sg-growl-shake, .sg-icon-pulse, .sg-smell-wisp, .sg-smell-cloud,
+  .sg-fly, .sg-hop, .sg-happy-glow {
+    animation: none;
+  }
+  .sg-growl-lines {
+    animation: none;
+    opacity: 1;
+  }
+}

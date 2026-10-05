@@ -1,0 +1,92 @@
+// Mirrors the backend DTOs (app.selfgotchi.stateapi / task / user). Keep in sync by hand.
+
+export type Category = 'PHYSICAL' | 'MENTAL'
+export type TaskType = 'CHECK' | 'METER' | 'QUOTA' | 'FRESHNESS'
+export type EffectKey = 'MOUTH_SMELL' | 'HUNGER' | 'MOTIVATION' | 'ROOM' | 'LUNCHBOX' | 'BOOK' | 'GENERIC'
+export type TaskStatus = 'UPCOMING' | 'DUE_SOON' | 'DONE' | 'MISSED' | 'OFF'
+
+export type Pose = 'NORMAL' | 'TIRED' | 'EXHAUSTED' | 'LAZY'
+export type Face = 'NEUTRAL' | 'HAPPY' | 'WORRIED' | 'VERY_WORRIED' | 'TIRED' | 'EXHAUSTED'
+export type EffectType = 'MOUTH_SMELL' | 'BELLY_GROWL' | 'SLOUCH' | 'SWEATPANTS'
+export type IconType = 'LUNCHBOX' | 'BOOK' | 'GENERIC'
+
+export interface Effect {
+  key: EffectType
+  severity: number
+}
+
+export interface Icon {
+  key: IconType
+  severity: number
+  taskId: number
+}
+
+export interface CharacterState {
+  pose: Pose
+  face: Face
+  /** 0 (clean) to 3 (filthy) */
+  room: number
+  effects: Effect[]
+  icons: Icon[]
+  iconOverflow: number
+  streakBonus: boolean
+}
+
+export interface TaskState {
+  id: number
+  name: string
+  category: Category
+  type: TaskType
+  effectKey: EffectKey
+  sortOrder: number
+  status: TaskStatus
+  severity: number
+  /** ISO instant of the next relevant deadline, null when OFF */
+  dueAt: string | null
+  done: number
+  target: number
+  streak: number
+  daysSinceDone: number | null
+  latestCompletionId: number | null
+}
+
+export interface StateResponse {
+  at: string
+  preview: boolean
+  logicalDate: string
+  timezone: string
+  character: CharacterState
+  tasks: TaskState[]
+}
+
+export interface CompletionResponse {
+  id: number
+  taskId: number
+  completedAt: string
+  source: 'APP' | 'NOTIFICATION'
+}
+
+export interface CompleteResponse {
+  completion: CompletionResponse
+  state: StateResponse
+}
+
+export interface Me {
+  email: string
+  displayName: string
+  timezone: string
+  dayResetHour: number
+}
+
+export interface FieldError {
+  field: string
+  message: string
+}
+
+/** RFC 7807 problem detail as returned by the API. */
+export interface Problem {
+  status: number
+  title?: string
+  detail?: string
+  errors?: FieldError[]
+}

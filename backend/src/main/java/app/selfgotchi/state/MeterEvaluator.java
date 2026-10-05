@@ -26,12 +26,17 @@ final class MeterEvaluator {
     }
 
     static TaskEvaluation evaluate(TaskContext c, MeterSchedule s) {
-        List<Instant> deadlines = deadlines(c.day, c.today, s);
+        // On the creation day, slots due before the task existed don't exist.
+        List<Instant> deadlines = deadlines(c.day, c.today, s).stream().filter(c::existedBefore).toList();
+        int streak = streak(c, s);
+        if (deadlines.isEmpty()) {
+            return c.off(streak);
+        }
         int slots = deadlines.size();
-        int filled = filledSlots(c, s, c.today);
+        int filled = Math.min(slots, filledSlots(c, s, c.today));
         int passed = 0;
         for (Instant deadline : deadlines) {
-            if (!c.now.isBefore(deadline) && c.existedBefore(deadline)) {
+            if (!c.now.isBefore(deadline)) {
                 passed++;
             }
         }
@@ -49,7 +54,7 @@ final class MeterEvaluator {
         } else {
             status = TaskStatus.UPCOMING;
         }
-        return new TaskEvaluation(c.task.id(), status, severity, dueAt, filled, slots, streak(c, s), null,
+        return new TaskEvaluation(c.task.id(), status, severity, dueAt, filled, slots, streak, null,
             c.latestIdOn(c.today));
     }
 

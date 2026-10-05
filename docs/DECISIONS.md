@@ -56,3 +56,16 @@ Choices made where `DESIGN.md` is ambiguous or silent. Newest at the bottom of e
 - `/state` loads the last 400 days of completions (bounds streak length on the home screen); `/history` loads the whole log for best streaks. Fine for one user; revisit for the product phase.
 - `/history` defaults to the 12 weeks ending today, max 400 days per request, includes archived tasks (`active: false`), and reports per-day results `ON_TIME / LATE / PARTIAL / MISSED / PENDING / OFF / NONE`. Quota and freshness tasks only mark days with a completion (`ON_TIME`); their streaks are weekly / none.
 - The `complete`/`undo` controller lives in `stateapi` (it composes the log with the engine), so `task` never depends on `stateapi`.
+
+## Home screen and character (milestone 5)
+- `CharacterStage` stacks the five layers as absolutely positioned elements on one 1024x1024 coordinate space, scaled to the container. Faces are drawn in a 440x440 box centered on `headAnchor` (scaled by `headAnchor.scale`).
+- `placeholderManifest` has the exact DESIGN.md manifest shape; its URLs are `placeholder:pose/<POSE>` / `placeholder:face/<FACE>`. `AssetImage` renders the inline SVG for those and a plain `<img>` for anything else, so Phase 2 only swaps the manifest.
+- Placeholder poses are headless bodies (the face asset is the whole head), so every pose keeps the neck at the same spot under the fixed head anchor.
+- Mouth, belly and thought-bubble anchors are fixed offsets from `headAnchor` (the manifest format has no other anchors).
+- Effects map: smell 1 wisps / 2 cloud / 3 dark cloud + flies; belly growl lines with a shake every 9 s; SLOUCH = CSS lean on the body; SWEATPANTS = grey CSS filter on the pose layer only (works on real images too); room level 3 also gets flies.
+- Removed effects fade out over 0.7 s (`useFadeOut`); a completion plays a hop + sparkle burst. All motion stops under `prefers-reduced-motion`.
+- Task groups: Due soon, Needs attention (MISSED), Later, Done, Not today; within a group by severity, then deadline. DONE checkmark/meter/freshness and OFF rows can't be tapped; quota rows always can (extra sessions are allowed).
+- Undo is a 6 s toast after each completion.
+- Times are shown in the user's time zone from `/state`, not the browser's.
+- A dev-only `/gallery` route renders every placeholder layer and state without the backend (`?only=<text>` filters).
+- Engine fix found via the UI: on the creation day, meter slots due before the task was created don't exist (target shrinks; all slots before creation → OFF that day).
