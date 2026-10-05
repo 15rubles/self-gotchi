@@ -127,9 +127,68 @@
   50% { opacity: 1; }
 }
 
+/* ---- Single-photo avatar ------------------------------------------------------------- */
+
+/* Breathing: a very slow zoom reads as alive without shaking the whole scene. */
+.sg-breathe {
+  transform-origin: 50% 60%;
+  animation: sg-breathe 4s ease-in-out infinite;
+}
+@keyframes sg-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.012); }
+}
+
+/* Slouch and hop scaled so the photo's edges stay hidden. */
+.sg-slouch-photo {
+  transform: translateY(1.5%) rotate(-2deg) scale(1.08);
+  transform-origin: 50% 50%;
+  transition: transform 0.6s ease;
+}
+.sg-hop-photo {
+  animation: sg-hop-photo 0.6s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes sg-hop-photo {
+  0%, 100% { transform: scale(1); }
+  40% { transform: translateY(-2.5%) scale(1.06); }
+}
+
+/* Poses as slump/tilt (scaled up so the photo never shows its edges). */
+.sg-photo-pose {
+  transform-origin: 50% 50%;
+  transition: transform 0.8s ease;
+}
+.sg-photo-pose-TIRED { transform: translateY(1.5%) rotate(-1.5deg) scale(1.05); }
+.sg-photo-pose-EXHAUSTED { transform: translateY(3%) rotate(-5deg) scale(1.2); }
+.sg-photo-pose-LAZY { transform: translateY(3%) rotate(-10deg) scale(1.32); }
+
+/* ...and as color grades on the photo. */
+[class*='sg-photo-filter-'] { transition: filter 0.8s ease; }
+.sg-photo-filter-TIRED { filter: saturate(0.8) brightness(0.93); }
+.sg-photo-filter-EXHAUSTED { filter: saturate(0.5) brightness(0.8) contrast(0.92) sepia(0.12); }
+.sg-photo-filter-LAZY { filter: saturate(0.85) brightness(0.9); }
+
+.sg-haze {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sg-haze 4s ease-in-out infinite;
+}
+@keyframes sg-haze {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(14px, -22px) scale(1.12); }
+}
+
+.sg-sweat {
+  animation: sg-sweat 3s ease-in-out infinite;
+}
+@keyframes sg-sweat {
+  0%, 60% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sg-bob, .sg-growl-shake, .sg-icon-pulse, .sg-smell-wisp, .sg-smell-cloud,
-  .sg-fly, .sg-hop, .sg-happy-glow {
+  .sg-fly, .sg-hop, .sg-hop-photo, .sg-happy-glow, .sg-breathe, .sg-haze, .sg-sweat {
     animation: none;
   }
   .sg-growl-lines {

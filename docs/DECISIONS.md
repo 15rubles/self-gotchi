@@ -69,3 +69,12 @@ Choices made where `DESIGN.md` is ambiguous or silent. Newest at the bottom of e
 - Times are shown in the user's time zone from `/state`, not the browser's.
 - A dev-only `/gallery` route renders every placeholder layer and state without the backend (`?only=<text>` filters).
 - Engine fix found via the UI: on the creation day, meter slots due before the task was created don't exist (target shrinks; all slots before creation → OFF that day).
+
+## Photo avatar (user request after milestone 5)
+- The user didn't like the illustrated placeholders and asked for a realistic look using their own photo. Image generation is out of scope (Phase 2, needs a provider), so the chosen option is **your photo + overlays**: the photo is the whole scene and states are realistic treatments on it. The expression itself can't change on a single photo.
+- The photo stays local: `docs/*.jpg|png` and everything in `frontend/src/local-avatar/` except its README are gitignored. The app picks up `src/local-avatar/photo.{jpg,jpeg,png,webp}` at build time; without one it falls back to the illustrated placeholders (also on `/gallery?art=illustrated`).
+- The manifest keeps the DESIGN.md shape (all poses point at the photo, faces at `overlay:face/<FACE>`) plus an optional `photo` extension: crop offset and facial landmarks in face units. Landmark pixels are set by hand in `photo/photoAvatar.ts`; the head anchor and scale are derived from them so the shared anchors (mouth, belly, thought bubble) land on the real face.
+- Poses: TIRED / EXHAUSTED / LAZY = increasing slump and tilt plus a desaturating, darkening color grade (scaled up so the photo's edges never show). SWEATPANTS = grey tint on the photo.
+- Faces: soft overlays at the real eye positions: blush and warmth (happy), cool tint and a sweat drop (worried), more of both and three drops (very worried), under-eye shadows (tired), stronger shadows and pallor (exhausted).
+- Effects: blurred green haze beside the mouth instead of cartoon clouds; flies, room mess and thought icons use the OS emoji font, which looks much closer to a photo than line art. Room level 2–3 adds a grimy color cast, vignette and blotches on the photo itself.
+- Breathing is a very slow zoom instead of the bob (bobbing a full photo looks like camera shake); the completion hop is a small lift + zoom.

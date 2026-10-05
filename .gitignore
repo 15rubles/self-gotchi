@@ -13,3 +13,11 @@ Thumbs.db
 # Env
 .env
 .env.*
+
+# Personal photos: never commit (DESIGN.md "Privacy and security")
+docs/photo.jpg
+docs/*.jpg
+docs/*.jpeg
+docs/*.png
+frontend/src/local-avatar/*
+!frontend/src/local-avatar/README.md

@@ -12,6 +12,26 @@ export interface AssetManifest {
   headAnchor: { x: number; y: number; scale: number }
   poses: Record<Pose, string>
   faces: Record<Face, string>
+  /**
+   * Extension (not in DESIGN.md): set for a single-photo avatar, where one real photo is the
+   * whole scene and states are drawn as treatments and overlays on it.
+   */
+  photo?: PhotoFrame
+}
+
+export interface Point {
+  x: number
+  y: number
+}
+
+export interface PhotoFrame {
+  src: string
+  /** Canvas y of the photo's top edge (≤ 0); the photo spans the canvas width. */
+  top: number
+  /** Photo height in canvas units. */
+  height: number
+  /** Facial landmarks in face units (the 440x440 face box centered on the head anchor). */
+  landmarks: { leftEye: Point; rightEye: Point; mouth: Point }
 }
 
 /** All layers share one square coordinate system. */
