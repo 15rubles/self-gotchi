@@ -28,3 +28,18 @@ Choices made where `DESIGN.md` is ambiguous or silent. Newest at the bottom of e
 - FRESHNESS: exactly 3 strictly increasing thresholds (one per severity level), 1–365 days.
 - `effectKey` must belong to the task's category: physical = MOUTH_SMELL, HUNGER, MOTIVATION, ROOM; mental = LUNCHBOX, BOOK, GENERIC.
 - Integration tests are named `*IntegrationTest` so plain `./mvnw test` (Surefire) runs them; no Failsafe split.
+
+## State Engine (milestone 3)
+- API: `StateEngine(EngineConfig)` with `computeState(tasks, completionLogs, now, zoneId) -> CharacterState` (the doc's signature) and `evaluate(...)`, which also returns each task's status for the home screen. The reset hour goes in through `EngineConfig` so the signature stays as specified.
+- Completions after `now` are ignored, so `/state?at=` in the past shows the past correctly.
+- **Creation grace:** a deadline that fell before the task was created is never "missed" (a checkmark created after today's deadline is OFF today; meter slots before creation don't count). A task is OFF entirely before its creation time. The quota's creation week is a grace week (severity 0).
+- **Checkmark:** DUE_SOON while `deadline - dueSoonMinutes <= now < deadline`; MISSED from the deadline on. "Missed 2+ days in a row" = today missed and the previous *scheduled* occurrence (skipping unscheduled weekdays, within 7 days, not before creation) also had no completion. Any completion within the logical day clears it, even after the deadline.
+- **Meter:** counted completions (respecting `minGapMinutes` from the previous *counted* one) fill slots in order, so a late completion fills the earliest open slot. Extra completions beyond the slot count are ignored. Severity = deadlines passed minus slots filled, capped at 3. DUE_SOON uses a fixed 60 min before the next open slot.
+- **Quota:** `expected = floor(timesPerWeek * fullDaysElapsed / 7)`, severity = `expected - done` clamped to 0..2; 3 when the sessions still needed exceed the days left including today (assumes at most one session per day). Every completion counts as a session, even two on one day. Status DUE_SOON when every remaining day is needed.
+- **Freshness:** days = logical days between the last completion and today; never done counts from creation. `dueAt` = when the first threshold will be reached.
+- **Layers:** MOUTH_SMELL severity → smell effect (severity 3 = cloud + flies, drawn by the frontend). HUNGER: belly growl at every severity ≥ 1 (not only 1), TIRED pose and face at 2, EXHAUSTED at 3. MOTIVATION: SLOUCH effect at 1, LAZY pose at 2–3, SWEATPANTS effect at 3. ROOM: room level = severity. Several tasks on one physical key take the max.
+- **Mental:** each mental task with severity ≥ 1 gets its own icon (so "+2" overflow is meaningful); WORRIED face at 2, VERY_WORRIED at 3; severity 1 is icon only.
+- **Face:** a mood exists only at severity ≥ 2. Highest wins; ties go to physical. Only HUNGER produces a physical mood (smell, laziness and the room show elsewhere).
+- **Icons:** ordered by severity (desc), then sort order, then task id; first 3 shown, the rest is `iconOverflow`.
+- **Streaks:** an active streak is ≥ 2 consecutive periods (`EngineConfig.streakMinLength`). Checkmark = scheduled days with any completion (late counts); meter = days with every slot filled; quota = weeks met; freshness has none. Today counts once done; until then the streak runs through yesterday.
+- **`streakBonus`** is true only in the happy state (everything at severity 0 and an active streak), so the frontend can tie sparkles to the happy face.
