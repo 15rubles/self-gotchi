@@ -255,5 +255,5 @@ async function main() {
 main().catch((error) => {
   console.error(`\nFailed: ${error.message}`)
   writeManifest()
-  process.exit(1)
+  process.exitCode = 1 // not process.exit(): avoids a libuv assertion on Windows after fetch
 })
