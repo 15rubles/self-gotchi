@@ -12,9 +12,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 /**
  * Personal phase: one in-memory account, form login, session cookie.
@@ -26,22 +26,20 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // Plain (non-XOR) handler so the SPA can echo the XSRF-TOKEN cookie value as a header.
-        CsrfTokenRequestAttributeHandler csrfHandler = new CsrfTokenRequestAttributeHandler();
-        csrfHandler.setCsrfRequestAttributeName(null);
-
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/login", "/error").permitAll()
                 .anyRequest().authenticated())
             .formLogin(Customizer.withDefaults())
             .logout(Customizer.withDefaults())
+            // XSRF-TOKEN cookie readable by the SPA, echoed back as the X-XSRF-TOKEN header.
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .csrfTokenRequestHandler(csrfHandler))
+                .csrfTokenRequestHandler(new SpaCsrf.TokenRequestHandler()))
+            .addFilterAfter(new SpaCsrf.CookieFilter(), BasicAuthenticationFilter.class)
             .exceptionHandling(ex -> ex.defaultAuthenticationEntryPointFor(
                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
-                new AntPathRequestMatcher("/api/**")));
+                PathPatternRequestMatcher.withDefaults().matcher("/api/**")));
         return http.build();
     }
 

@@ -2,6 +2,7 @@ package app.selfgotchi.state;
 
 import java.time.DayOfWeek;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -21,11 +22,13 @@ import app.selfgotchi.state.model.Recurrence;
 import app.selfgotchi.state.model.Schedule;
 import app.selfgotchi.state.model.TaskDef;
 import app.selfgotchi.state.model.TaskEvaluation;
+import app.selfgotchi.state.model.TaskHistory;
 
 /** Test fixture: build tasks and completions in local wall-clock time, then evaluate. */
 final class Scenario {
 
     private final ZoneId zone;
+    private final EngineConfig config;
     private final StateEngine engine;
     private final List<TaskDef> tasks = new ArrayList<>();
     private final List<CompletionLog> logs = new ArrayList<>();
@@ -40,6 +43,7 @@ final class Scenario {
     Scenario(ZoneId zone, String createdAt, EngineConfig config) {
         this.zone = zone;
         this.createdAt = t(createdAt);
+        this.config = config;
         this.engine = new StateEngine(config);
     }
 
@@ -104,6 +108,16 @@ final class Scenario {
 
     CharacterState stateAt(String localDateTime) {
         return engine.computeState(tasks, logs, t(localDateTime), zone);
+    }
+
+    TaskHistory history(long id, String from, String to, String nowLocal) {
+        return history(id, null, from, to, nowLocal);
+    }
+
+    TaskHistory history(long id, String archivedAtLocal, String from, String to, String nowLocal) {
+        TaskDef task = tasks.stream().filter(t -> t.id() == id).findFirst().orElseThrow();
+        return new HistoryCalculator(config).history(task, archivedAtLocal == null ? null : t(archivedAtLocal),
+            logs, LocalDate.parse(from), LocalDate.parse(to), t(nowLocal), zone);
     }
 
     TaskEvaluation task(long id, String localDateTime) {

@@ -15,6 +15,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import app.selfgotchi.common.ValidationException;
 import app.selfgotchi.state.TaskValidator.Violation;
 import app.selfgotchi.state.model.CheckSchedule;
 import app.selfgotchi.state.model.FreshnessSchedule;
@@ -124,8 +125,8 @@ class ScheduleCodecTest {
     })
     void rejectsInvalidSchedules(String description, String json, String expectedField) {
         assertThatThrownBy(() -> codec.fromJson(json))
-            .isInstanceOf(InvalidTaskException.class)
-            .satisfies(e -> assertThat(((InvalidTaskException) e).violations())
+            .isInstanceOf(ValidationException.class)
+            .satisfies(e -> assertThat(((ValidationException) e).violations())
                 .extracting(Violation::field)
                 .contains(expectedField));
     }
@@ -134,15 +135,15 @@ class ScheduleCodecTest {
     void reportsEveryBadFieldAtOnce() {
         assertThatThrownBy(() -> codec.fromJson("""
             { "type": "CHECK", "deadline": "late", "days": ["XYZ"], "extra": 1 }"""))
-            .isInstanceOf(InvalidTaskException.class)
-            .satisfies(e -> assertThat(((InvalidTaskException) e).violations())
+            .isInstanceOf(ValidationException.class)
+            .satisfies(e -> assertThat(((ValidationException) e).violations())
                 .extracting(Violation::field)
                 .containsExactlyInAnyOrder("schedule.deadline", "schedule.days", "schedule.extra"));
     }
 
     @Test
     void rejectsNonObjectJson() {
-        assertThatThrownBy(() -> codec.fromJson("[1,2]")).isInstanceOf(InvalidTaskException.class);
-        assertThatThrownBy(() -> codec.fromJson("not json")).isInstanceOf(InvalidTaskException.class);
+        assertThatThrownBy(() -> codec.fromJson("[1,2]")).isInstanceOf(ValidationException.class);
+        assertThatThrownBy(() -> codec.fromJson("not json")).isInstanceOf(ValidationException.class);
     }
 }

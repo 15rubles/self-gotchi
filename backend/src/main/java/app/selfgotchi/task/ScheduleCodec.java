@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import app.selfgotchi.common.ValidationException;
 import app.selfgotchi.state.TaskValidator.Violation;
 import app.selfgotchi.state.model.CheckSchedule;
 import app.selfgotchi.state.model.FreshnessSchedule;
@@ -61,19 +62,19 @@ public class ScheduleCodec {
         try {
             return decode(mapper.readTree(json));
         } catch (JsonProcessingException e) {
-            throw new InvalidTaskException(ROOT, "not valid JSON");
+            throw new ValidationException(ROOT, "not valid JSON");
         }
     }
 
     public Schedule decode(JsonNode node) {
         if (node == null || !node.isObject()) {
-            throw new InvalidTaskException(ROOT, "must be an object");
+            throw new ValidationException(ROOT, "must be an object");
         }
         Reader r = new Reader(node);
         TaskType type = r.enumValue("type", TaskType.class, null);
         if (type == null) {
             r.errors.add(new Violation(ROOT + ".type", "must be one of CHECK, METER, QUOTA, FRESHNESS"));
-            throw new InvalidTaskException(r.errors);
+            throw new ValidationException(r.errors);
         }
         r.rejectUnknown(ALLOWED_FIELDS.get(type));
 
@@ -102,7 +103,7 @@ public class ScheduleCodec {
             }
         }
         if (!r.errors.isEmpty()) {
-            throw new InvalidTaskException(r.errors);
+            throw new ValidationException(r.errors);
         }
         return schedule;
     }

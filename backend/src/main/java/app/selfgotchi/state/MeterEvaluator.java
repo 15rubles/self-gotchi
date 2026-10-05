@@ -77,18 +77,27 @@ final class MeterEvaluator {
         return result;
     }
 
-    /** Completions on a logical day that count toward slots, respecting the minimum gap, capped at the slot count. */
+    /** Number of slots filled on a logical day. */
     static int filledSlots(TaskContext c, MeterSchedule s, LocalDate date) {
+        return countedCompletions(c, s, date).size();
+    }
+
+    /**
+     * Completions on a logical day that count toward slots, respecting the minimum gap and capped
+     * at the slot count; the i-th one fills slot i.
+     */
+    static List<CompletionLog> countedCompletions(TaskContext c, MeterSchedule s, LocalDate date) {
         Duration minGap = Duration.ofMinutes(s.minGapMinutes());
-        Instant lastCounted = null;
-        int counted = 0;
+        List<CompletionLog> counted = new ArrayList<>();
         for (CompletionLog log : c.on(date)) {
-            if (lastCounted == null || !log.completedAt().isBefore(lastCounted.plus(minGap))) {
-                counted++;
-                lastCounted = log.completedAt();
+            if (counted.size() == s.slotCount()) {
+                break;
+            }
+            if (counted.isEmpty() || !log.completedAt().isBefore(counted.getLast().completedAt().plus(minGap))) {
+                counted.add(log);
             }
         }
-        return Math.min(counted, s.slotCount());
+        return counted;
     }
 
     /** Consecutive days with every slot filled, through today if full, otherwise through yesterday. */

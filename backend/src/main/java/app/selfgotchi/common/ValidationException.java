@@ -1,20 +1,20 @@
-package app.selfgotchi.task;
+package app.selfgotchi.common;
 
 import java.util.List;
 
 import app.selfgotchi.state.TaskValidator.Violation;
 
-/** A task or schedule failed validation; carries one entry per offending field. */
-public class InvalidTaskException extends RuntimeException {
+/** A request failed validation; carries one entry per offending field. Maps to HTTP 400. */
+public class ValidationException extends RuntimeException {
 
     private final List<Violation> violations;
 
-    public InvalidTaskException(List<Violation> violations) {
+    public ValidationException(List<Violation> violations) {
         super(violations.stream().map(v -> v.field() + ": " + v.message()).reduce((a, b) -> a + "; " + b).orElse(""));
         this.violations = List.copyOf(violations);
     }
 
-    public InvalidTaskException(String field, String message) {
+    public ValidationException(String field, String message) {
         this(List.of(new Violation(field, message)));
     }
 

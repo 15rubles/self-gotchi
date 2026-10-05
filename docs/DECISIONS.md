@@ -43,3 +43,16 @@ Choices made where `DESIGN.md` is ambiguous or silent. Newest at the bottom of e
 - **Icons:** ordered by severity (desc), then sort order, then task id; first 3 shown, the rest is `iconOverflow`.
 - **Streaks:** an active streak is ≥ 2 consecutive periods (`EngineConfig.streakMinLength`). Checkmark = scheduled days with any completion (late counts); meter = days with every slot filled; quota = weeks met; freshness has none. Today counts once done; until then the streak runs through yesterday.
 - **`streakBonus`** is true only in the happy state (everything at severity 0 and an active streak), so the frontend can tie sparkles to the happy face.
+
+## REST API (milestone 4)
+- **Login name = the user's email** (`APP_USERNAME`, default `aleksei@selfgotchi.local`), so the security principal maps straight onto `users.email`; OAuth later yields an email too.
+- `UserBootstrap` creates the users row on startup. `APP_USER_TIMEZONE` / `APP_DAY_RESET_HOUR` are applied to the row whenever set, which is the only way to change them until a settings screen exists. Unset time zone = the JVM default when the row is first created.
+- CSRF stays on: the SPA reads the `XSRF-TOKEN` cookie and sends `X-XSRF-TOKEN` (Spring Security 6's documented SPA recipe; `csrf.spa()` only exists in Security 7). Unauthenticated `/api/**` calls get 401 instead of a login redirect.
+- Extra endpoints beyond DESIGN.md's table: `GET /tasks/{id}` (editor) and `GET /me` (display name, time zone, reset hour for the frontend).
+- `POST /tasks/{id}/complete` returns `{completion, state}` where `state` is the full `/state` payload (a superset of CharacterState), so the home screen updates from one response including the undo id. `DELETE /completions/{id}` returns the new state too.
+- `completedAt` may be up to 1 minute in the future (clock skew) and not before the task was created. Stored times are truncated to microseconds (Postgres precision).
+- Completing or editing an archived task is 409; archiving is idempotent. Other users' rows are 404.
+- `slot_index` is left null: the engine recomputes slot assignment from the log every time, so a stored value could only go stale.
+- `/state` loads the last 400 days of completions (bounds streak length on the home screen); `/history` loads the whole log for best streaks. Fine for one user; revisit for the product phase.
+- `/history` defaults to the 12 weeks ending today, max 400 days per request, includes archived tasks (`active: false`), and reports per-day results `ON_TIME / LATE / PARTIAL / MISSED / PENDING / OFF / NONE`. Quota and freshness tasks only mark days with a completion (`ON_TIME`); their streaks are weekly / none.
+- The `complete`/`undo` controller lives in `stateapi` (it composes the log with the engine), so `task` never depends on `stateapi`.

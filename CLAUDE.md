@@ -14,7 +14,7 @@ Habit tracker where a chibi avatar reacts to completed or missed habits.
 docker compose up -d                       # Postgres on :5432 (selfgotchi/selfgotchi)
 
 cd backend
-./mvnw spring-boot:run                     # API on :8080 (login aleksei / changeme by default)
+./mvnw spring-boot:run                     # API on :8080 (login aleksei@selfgotchi.local / changeme by default)
 ./mvnw test                                # all tests; integration tests need Docker running
 ./mvnw test -Dtest='app.selfgotchi.state.**'   # State Engine only, no Docker
 ./mvnw -DskipTests package                 # build jar
@@ -49,3 +49,8 @@ cd backend
 - Phase 1 scope only: no AI image generation, photo upload, Web Push, OAuth, signup or monetization.
   `avatar` and `notify` hold interfaces only.
 - Ambiguity in the design doc: pick the simplest option, record it in `docs/DECISIONS.md`.
+
+## Conventions
+- Integration tests use `@IntegrationTest` (Testcontainers Postgres, MockMvc, `MutableClock`, rolled-back transaction) and are named `*IntegrationTest`.
+- Errors are RFC 7807 problem details; validation errors carry `errors: [{field, message}]` (`common.ApiExceptionHandler`).
+- Rows of other users are reported as 404, never 403.

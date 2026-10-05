@@ -44,6 +44,11 @@ public class User {
         this.createdAt = createdAt;
     }
 
+    public void updateSettings(ZoneId timezone, int dayResetHour) {
+        this.timezone = timezone.getId();
+        this.dayResetHour = (short) dayResetHour;
+    }
+
     public Long getId() {
         return id;
     }

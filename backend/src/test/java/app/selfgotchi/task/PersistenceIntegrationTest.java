@@ -67,9 +67,9 @@ class PersistenceIntegrationTest {
         assertThat(tasks.findByIdAndUserId(teeth.getId(), other.getId())).isEmpty();
 
         completions.saveAndFlush(new TaskCompletion(teeth.getId(), me.getId(), NOW, CompletionSource.APP, NOW));
-        assertThat(completions.findByUserIdAndCompletedAtGreaterThanEqualAndCompletedAtLessThanOrderByCompletedAtAsc(
+        assertThat(completions.findByUserIdAndCompletedAtGreaterThanEqualAndCompletedAtLessThanEqualOrderByCompletedAtAsc(
             me.getId(), NOW, NOW.plusSeconds(1))).hasSize(1);
-        assertThat(completions.findByUserIdAndCompletedAtGreaterThanEqualAndCompletedAtLessThanOrderByCompletedAtAsc(
+        assertThat(completions.findByUserIdAndCompletedAtGreaterThanEqualAndCompletedAtLessThanEqualOrderByCompletedAtAsc(
             other.getId(), NOW, NOW.plusSeconds(1))).isEmpty();
     }
 
