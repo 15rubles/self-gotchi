@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetch } from './client'
-import type { CompleteResponse, Me, StateResponse } from './types'
+import type { CompleteResponse, HistoryResponse, Me, StateResponse, TaskDefinition, TaskInput } from './types'
 
 export const stateKey = ['state'] as const
 
@@ -50,5 +50,65 @@ export function useUndoCompletion() {
       client.setQueryData(stateKey, state)
       void client.invalidateQueries({ queryKey: ['history'] })
     },
+  })
+}
+
+// ---- task definitions ------------------------------------------------------------------------
+
+const tasksKey = ['tasks'] as const
+
+export function useTasks(includeArchived = false) {
+  return useQuery({
+    queryKey: [...tasksKey, { includeArchived }],
+    queryFn: () => apiFetch<TaskDefinition[]>(`tasks?includeArchived=${includeArchived}`),
+  })
+}
+
+export function useTask(id: number | undefined) {
+  return useQuery({
+    queryKey: [...tasksKey, id],
+    queryFn: () => apiFetch<TaskDefinition>(`tasks/${id}`),
+    enabled: id !== undefined,
+  })
+}
+
+/** After any task change the character, the list and the history may all differ. */
+function useInvalidateTaskData() {
+  const client = useQueryClient()
+  return () => {
+    void client.invalidateQueries({ queryKey: tasksKey })
+    void client.invalidateQueries({ queryKey: stateKey })
+    void client.invalidateQueries({ queryKey: ['history'] })
+  }
+}
+
+export function useSaveTask() {
+  const invalidate = useInvalidateTaskData()
+  return useMutation({
+    mutationFn: ({ id, input }: { id?: number; input: TaskInput }) =>
+      apiFetch<TaskDefinition>(id === undefined ? 'tasks' : `tasks/${id}`, {
+        method: id === undefined ? 'POST' : 'PUT',
+        body: JSON.stringify(input),
+      }),
+    onSuccess: invalidate,
+  })
+}
+
+export function useArchiveTask() {
+  const invalidate = useInvalidateTaskData()
+  return useMutation({
+    mutationFn: (id: number) => apiFetch<void>(`tasks/${id}`, { method: 'DELETE' }),
+    onSuccess: invalidate,
+  })
+}
+
+// ---- history -------------------------------------------------------------------------------
+
+/** Disabled until both logical dates are known. */
+export function useHistory(from: string | undefined, to: string | undefined) {
+  return useQuery({
+    queryKey: ['history', from, to],
+    queryFn: () => apiFetch<HistoryResponse>(`history?from=${from}&to=${to}`),
+    enabled: Boolean(from && to),
   })
 }

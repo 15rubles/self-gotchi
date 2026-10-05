@@ -90,7 +90,7 @@ public class StateService {
             var history = calculator.history(tasks.toDef(task), task.getArchivedAt(),
                 logsByTask.getOrDefault(task.getId(), List.of()), start, end, now, user.getZoneId());
             entries.add(new HistoryResponse.TaskEntry(task.getId(), task.getName(), task.getCategory(),
-                task.getType(), task.isActive(), task.getArchivedAt(), history.currentStreak(),
+                task.getType(), task.getEffectKey(), task.isActive(), task.getArchivedAt(), history.currentStreak(),
                 history.bestStreak(), history.days()));
         }
         return new HistoryResponse(start, end, entries);

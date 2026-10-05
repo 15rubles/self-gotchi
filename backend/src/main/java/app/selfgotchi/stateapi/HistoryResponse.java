@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import app.selfgotchi.state.model.Category;
+import app.selfgotchi.state.model.EffectKey;
 import app.selfgotchi.state.model.TaskHistory;
 import app.selfgotchi.state.model.TaskType;
 
@@ -16,6 +17,7 @@ public record HistoryResponse(LocalDate from, LocalDate to, List<TaskEntry> task
         String name,
         Category category,
         TaskType type,
+        EffectKey effectKey,
         boolean active,
         Instant archivedAt,
         int currentStreak,

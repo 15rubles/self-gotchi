@@ -316,6 +316,7 @@ class ApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.from").value("2026-09-30"))
                 .andExpect(jsonPath("$.tasks", hasSize(1)))
+                .andExpect(jsonPath("$.tasks[0].effectKey").value("LUNCHBOX"))
                 .andExpect(jsonPath("$.tasks[0].currentStreak").value(3))
                 .andExpect(jsonPath("$.tasks[0].bestStreak").value(3))
                 .andExpect(jsonPath("$.tasks[0].days", hasSize(6)))
