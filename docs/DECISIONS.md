@@ -102,3 +102,11 @@ Choices made where `DESIGN.md` is ambiguous or silent. Newest at the bottom of e
 - `/history` now includes `effectKey` per task (for the icons) instead of the page fetching the task list too.
 - The Vite proxy target can be overridden with `API_TARGET` (default `http://localhost:8080`).
 - New meter habits default to no minimum gap (the eat preset sets 180 min itself).
+
+## Seed, PWA, README (milestone 7)
+- The six habits from DESIGN.md are seeded through `TaskService` (same validation as the API) **once per user**, recorded in `users.seeded_at` (migration V3). Habits the user already has with the same name are skipped, so a user who started with their own habits gets the rest added, and archiving or renaming never brings a default back. Homework uses MON–THU (the doc's JSON example); all times are the doc's placeholders.
+- One deployable: Spring serves `frontend/dist` (`STATIC_DIR`) and forwards app routes (`/tasks`, `/tasks/{id}`, `/history`, `/gallery`) to `index.html`. Needed because the installed PWA, the API and the server's login page must share one origin.
+- Only the files a browser needs to recognise and install the app are public (manifest, icons, service worker); the app shell and its assets, including any generated avatar images, require a session.
+- vite-plugin-pwa: `autoUpdate`, standalone, portrait; icons generated from `public/favicon.svg` by `@vite-pwa/assets-generator` (minimal 2023 preset). The service worker precaches the app shell but never serves `/api`, `/login`, `/logout` from cache.
+- The single-photo overlay mode is now dev-only and lazily loaded, so a personal photo in `src/local-avatar/` is never part of a production build.
+- No push notifications (Phase 1 scope); the PWA is installable only.

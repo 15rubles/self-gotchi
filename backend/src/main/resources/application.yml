@@ -18,6 +18,11 @@ spring:
   jackson:
     serialization:
       write-dates-as-timestamps: false
+  web:
+    resources:
+      # Serves the built frontend (cd frontend && npm run build) at the same origin as the API,
+      # which the installed PWA needs. Relative to the backend/ working directory.
+      static-locations: ${STATIC_DIR:file:../frontend/dist/},classpath:/static/
 
 server:
   port: ${PORT:8080}

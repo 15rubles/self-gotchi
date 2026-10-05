@@ -25,6 +25,9 @@ npm run dev                                # :5173, proxies /api, /login, /logou
 npm run build                              # type-check + production build
 npm run lint
 npm run avatar:generate                    # realistic avatar frames from src/local-avatar/photo.jpg (needs GEMINI_API_KEY; sends the photo to Google)
+
+# One origin (installable PWA): build the frontend, then the backend serves frontend/dist on :8080
+cd frontend && npm run build && cd ../backend && ./mvnw spring-boot:run
 ```
 On this machine the JDK is not on PATH: `export JAVA_HOME=~/.jdks/corretto-24.0.2` first (it compiles with `--release 21`).
 
@@ -56,3 +59,5 @@ cd backend
 - Integration tests use `@IntegrationTest` (Testcontainers Postgres, MockMvc, `MutableClock`, rolled-back transaction) and are named `*IntegrationTest`.
 - Errors are RFC 7807 problem details; validation errors carry `errors: [{field, message}]` (`common.ApiExceptionHandler`).
 - Rows of other users are reported as 404, never 403.
+- Seeding (`task.SeedRunner`) runs once per user (`users.seeded_at`); never make it depend on the task count.
+- Only PWA install files are public (`SecurityConfig`); the app shell and assets need a session.

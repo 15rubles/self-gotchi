@@ -33,6 +33,9 @@ public class User {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "seeded_at")
+    private Instant seededAt;
+
     protected User() {
     }
 
@@ -47,6 +50,14 @@ public class User {
     public void updateSettings(ZoneId timezone, int dayResetHour) {
         this.timezone = timezone.getId();
         this.dayResetHour = (short) dayResetHour;
+    }
+
+    public void markSeeded(Instant now) {
+        this.seededAt = now;
+    }
+
+    public Instant getSeededAt() {
+        return seededAt;
     }
 
     public Long getId() {

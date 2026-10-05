@@ -29,6 +29,11 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/login", "/error").permitAll()
+                // What a browser needs to recognise and install the PWA; the app shell and
+                // its assets (including any avatar images) stay behind the login.
+                .requestMatchers("/manifest.webmanifest", "/favicon.svg", "/favicon.ico", "/pwa-*.png",
+                    "/maskable-icon-*.png", "/apple-touch-icon*.png",
+                    "/sw.js", "/registerSW.js", "/workbox-*.js").permitAll()
                 .anyRequest().authenticated())
             .formLogin(Customizer.withDefaults())
             .logout(Customizer.withDefaults())

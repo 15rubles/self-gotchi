@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import type { CharacterState, Face, Pose } from '../api/types'
 import { CharacterStage } from '../character/CharacterStage'
-import { placeholderManifest } from '../character/manifest'
-import { defaultManifest, photoManifest } from '../character/photo/photoAvatar'
+import { placeholderManifest, type AssetManifest } from '../character/manifest'
+import { defaultManifest } from '../character/photo/photoAvatar'
 
 const base: CharacterState = {
   pose: 'NORMAL',
@@ -87,8 +87,14 @@ export function GalleryPage() {
   const [params] = useSearchParams()
   const only = params.get('only')?.toLowerCase()
   const art = params.get('art')
-  const manifest =
-    art === 'illustrated' ? placeholderManifest : art === 'photo' ? (photoManifest ?? defaultManifest) : defaultManifest
+  const [photo, setPhoto] = useState<AssetManifest | null>(null)
+  useEffect(() => {
+    // Dev only: keeps the personal photo out of production bundles entirely.
+    if (import.meta.env.DEV && art === 'photo') {
+      void import('../character/photo/devPhoto').then((m) => setPhoto(m.photoManifest))
+    }
+  }, [art])
+  const manifest = art === 'illustrated' ? placeholderManifest : art === 'photo' && photo ? photo : defaultManifest
   const showAnchors = params.has('anchors')
   const shown = only ? samples.filter((s) => s.title.toLowerCase().includes(only)) : samples
   return (
