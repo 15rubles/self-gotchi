@@ -127,6 +127,10 @@
   50% { opacity: 1; }
 }
 
+.sg-crossfade {
+  animation: sg-fade-in 0.7s ease-in-out both;
+}
+
 /* ---- Single-photo avatar ------------------------------------------------------------- */
 
 /* Breathing: a very slow zoom reads as alive without shaking the whole scene. */
@@ -188,7 +192,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .sg-bob, .sg-growl-shake, .sg-icon-pulse, .sg-smell-wisp, .sg-smell-cloud,
-  .sg-fly, .sg-hop, .sg-hop-photo, .sg-happy-glow, .sg-breathe, .sg-haze, .sg-sweat {
+  .sg-fly, .sg-hop, .sg-hop-photo, .sg-happy-glow, .sg-breathe, .sg-haze, .sg-sweat, .sg-crossfade {
     animation: none;
   }
   .sg-growl-lines {

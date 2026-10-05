@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router'
 import type { CharacterState, Face, Pose } from '../api/types'
 import { CharacterStage } from '../character/CharacterStage'
 import { placeholderManifest } from '../character/manifest'
-import { defaultManifest } from '../character/photo/photoAvatar'
+import { defaultManifest, photoManifest } from '../character/photo/photoAvatar'
 
 const base: CharacterState = {
   pose: 'NORMAL',
@@ -78,12 +78,18 @@ const samples: { title: string; state: CharacterState }[] = [
   },
 ]
 
-/** Dev page: every layer and animation for the active art (?art=illustrated for the drawn set), no backend needed. */
+/**
+ * Dev page: every layer and animation for the active art, no backend needed.
+ * ?only=<text> filters, ?art=illustrated|photo switches art, ?anchors shows the overlay anchors.
+ */
 export function GalleryPage() {
   const [celebrate, setCelebrate] = useState(0)
   const [params] = useSearchParams()
   const only = params.get('only')?.toLowerCase()
-  const manifest = params.get('art') === 'illustrated' ? placeholderManifest : defaultManifest
+  const art = params.get('art')
+  const manifest =
+    art === 'illustrated' ? placeholderManifest : art === 'photo' ? (photoManifest ?? defaultManifest) : defaultManifest
+  const showAnchors = params.has('anchors')
   const shown = only ? samples.filter((s) => s.title.toLowerCase().includes(only)) : samples
   return (
     <div className="space-y-4">
@@ -100,7 +106,7 @@ export function GalleryPage() {
       <div className={`grid gap-3 ${shown.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
         {shown.map(({ title, state }) => (
           <figure key={title}>
-            <CharacterStage state={state} manifest={manifest} celebrateKey={celebrate} className="!rounded-xl !border-2 !shadow-none" />
+            <CharacterStage state={state} manifest={manifest} celebrateKey={celebrate} showAnchors={showAnchors} className="!rounded-xl !border-2 !shadow-none" />
             <figcaption className="mt-1 text-center text-xs text-stone-600">{title}</figcaption>
           </figure>
         ))}

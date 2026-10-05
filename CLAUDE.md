@@ -24,6 +24,7 @@ npm install
 npm run dev                                # :5173, proxies /api, /login, /logout to :8080
 npm run build                              # type-check + production build
 npm run lint
+npm run avatar:generate                    # realistic avatar frames from src/local-avatar/photo.jpg (needs GEMINI_API_KEY; sends the photo to Google)
 ```
 On this machine the JDK is not on PATH: `export JAVA_HOME=~/.jdks/corretto-24.0.2` first (it compiles with `--release 21`).
 
@@ -49,6 +50,7 @@ cd backend
 - Phase 1 scope only: no AI image generation, photo upload, Web Push, OAuth, signup or monetization.
   `avatar` and `notify` hold interfaces only.
 - Ambiguity in the design doc: pick the simplest option, record it in `docs/DECISIONS.md`.
+- Never commit personal photos or generated avatar images: `docs/*.jpg|png` and `frontend/src/local-avatar/*` are gitignored on purpose.
 
 ## Conventions
 - Integration tests use `@IntegrationTest` (Testcontainers Postgres, MockMvc, `MutableClock`, rolled-back transaction) and are named `*IntegrationTest`.

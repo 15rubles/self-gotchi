@@ -17,6 +17,29 @@ export interface AssetManifest {
    * whole scene and states are drawn as treatments and overlays on it.
    */
   photo?: PhotoFrame
+  /**
+   * Extension (not in DESIGN.md): generated full-frame images, one per pose + expression
+   * (`"TIRED/WORRIED"`), used instead of compositing a face onto a body. Realistic images
+   * can't be layered convincingly, so each combination is its own photo.
+   */
+  frames?: Partial<Record<FrameKey, string>>
+  /** Head center/size per pose when it differs between frames (falls back to headAnchor). */
+  poseAnchors?: Partial<Record<Pose, HeadAnchor>>
+}
+
+export type FrameKey = `${Pose}/${Face}`
+
+export interface HeadAnchor {
+  x: number
+  y: number
+  scale: number
+}
+
+/** The frame for a pose + face, falling back to the closest one that exists. */
+export function pickFrame(manifest: AssetManifest, pose: Pose, face: Face): string | undefined {
+  const f = manifest.frames
+  if (!f) return undefined
+  return f[`${pose}/${face}`] ?? f[`${pose}/NEUTRAL`] ?? f[`NORMAL/${face}`] ?? f['NORMAL/NEUTRAL'] ?? Object.values(f)[0]
 }
 
 export interface Point {
@@ -63,8 +86,8 @@ export const placeholderManifest: AssetManifest = {
  * Where shared effects attach, derived from the head anchor so they follow any avatar.
  * Offsets are in canvas units at scale 1.
  */
-export function anchors(manifest: AssetManifest) {
-  const { x, y, scale } = manifest.headAnchor
+export function anchors(manifest: AssetManifest, pose?: Pose) {
+  const { x, y, scale } = (pose && manifest.poseAnchors?.[pose]) || manifest.headAnchor
   return {
     mouth: { x: x, y: y + 95 * scale },
     belly: { x: x, y: y + 330 * scale },
