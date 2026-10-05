@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: self-gotchi
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/selfgotchi}
+    username: ${DB_USER:selfgotchi}
+    password: ${DB_PASSWORD:selfgotchi}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: ${PORT:8080}
+
+app:
+  auth:
+    # Single hardcoded account for the personal phase. Override in any real deployment.
+    username: ${APP_USERNAME:aleksei}
+    password: ${APP_PASSWORD:changeme}
+  user:
+    email: ${APP_USER_EMAIL:aleksei@self-gotchi.local}
+    display-name: ${APP_USER_DISPLAY_NAME:Aleksei}
+    # Empty = the JVM's default zone at first start.
+    timezone: ${APP_USER_TIMEZONE:}
+    day-reset-hour: ${APP_DAY_RESET_HOUR:4}
+  seed:
+    enabled: ${APP_SEED:true}
