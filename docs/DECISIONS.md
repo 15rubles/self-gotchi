@@ -131,3 +131,8 @@ Choices made where `DESIGN.md` is ambiguous or silent. Newest at the bottom of e
 - Each status group is a Reminders-style list: a colored title with a count (Due soon orange, Needs attention red, Later blue, Done / Not today grey) over a white rounded card. Rows: a 22 px ring on the left (44 px tap target) that fills with the group color when done or while saving, the name at 17 px, a grey 15 px details line (in the group color when due soon or missed), hairline dividers starting at the text.
 - Severity is shown as Reminders' priority marks (`!`, `!!`, `!!!`) before the name, replacing the colored left border. The habit emoji and streak sit on the right. "Not today" rows get a dashed ring.
 - Ring colors are iOS system colors; titles and colored text use darker shades of the same hues so they stay ≥ 4.5:1 on white.
+
+## Undo from the list, Habits tab restyled (user request)
+- Like Reminders, the circle toggles: tapping a filled (done) circle takes back that habit's latest log (`latestCompletionId`, `DELETE /completions/{id}`). Partly done habits (a meter at 1/3, a quota at 1/3) show a small ↺ that takes back the last log. The 6 s toast after a tap stays.
+- Consequence: a weekly quota that's already met can no longer log extra sessions from the home screen (tapping its filled circle un-does instead). Extra sessions don't change the engine's result, so this was the simpler choice.
+- The Habits tab uses the same Reminders look via shared `ui/ListSection` + `ui/listStyles`: Physical (green) and Mental (purple) lists, plus Archived (grey) when "Show archived" (an iOS switch) is on. Rows: emoji on a tinted circle, name, grey type + schedule line, chevron. "New habit" is a blue text button as in iOS.

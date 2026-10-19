@@ -1,18 +1,19 @@
 import type { TaskState } from '../api/types'
 import { describeTask, effectEmoji, streakLabel } from '../lib/format'
-import type { GroupColor } from './TaskList'
+import { rowBodyClass, type ListColor } from '../ui/listStyles'
 
-/** Tasks that can't usefully be completed (again) today. */
-function isSettled(task: TaskState): boolean {
-  return task.status === 'OFF' || (task.status === 'DONE' && task.type !== 'QUOTA')
-}
+export type RowBusy = 'complete' | 'undo'
 
 /** Reminders' priority marks, used for severity: ! / !! / !!! */
 const priority = ['', '!', '!!', '!!!']
 
 /**
- * One habit in the iOS Reminders style: a circle to tap on the left, the name with priority
- * marks, a grey details line, and a hairline divider that starts at the text.
+ * One habit in the iOS Reminders style: a circle on the left, the name with priority marks,
+ * a grey details line, and a hairline divider that starts at the text.
+ *
+ * Like Reminders, the circle toggles: tap an empty one to log the habit, tap a filled (done)
+ * one to take the latest log back. Partly done habits (1/3 meals) get a small ↺ to take back
+ * the last tap.
  */
 export function TaskRow({
   task,
@@ -20,28 +21,35 @@ export function TaskRow({
   timeZone,
   busy,
   onComplete,
+  onUndo,
 }: {
   task: TaskState
-  color: GroupColor
+  color: ListColor
   timeZone: string
-  busy: boolean
+  busy: RowBusy | null
   onComplete: (task: TaskState) => void
+  onUndo: (task: TaskState) => void
 }) {
-  const settled = isSettled(task)
-  const filled = busy || task.status === 'DONE'
+  const done = task.status === 'DONE'
   const off = task.status === 'OFF'
+  const canUndo = task.latestCompletionId !== null
+  // While saving, show where the tap is going.
+  const filled = busy === 'complete' || (done && busy !== 'undo')
+  const settled = off || done
   const streak = streakLabel(task)
-  const marks = task.status === 'DONE' || off ? '' : (priority[task.severity] ?? priority[3])
-  const label =
-    task.status === 'DONE' && task.type === 'QUOTA' ? `Log another ${task.name} session` : `Mark ${task.name} done`
+  const marks = settled ? '' : (priority[task.severity] ?? priority[3])
+
+  const toggle = () => (done ? onUndo(task) : onComplete(task))
+  const ringDisabled = busy !== null || off || (done && !canUndo)
 
   return (
     <li className="group flex items-stretch">
       <button
         type="button"
-        onClick={() => onComplete(task)}
-        disabled={busy || settled}
-        aria-label={label}
+        onClick={toggle}
+        disabled={ringDisabled}
+        aria-label={done ? `Mark ${task.name} not done` : `Mark ${task.name} done`}
+        aria-pressed={done}
         className="grid w-12 shrink-0 place-items-center disabled:cursor-default"
       >
         <span
@@ -55,7 +63,7 @@ export function TaskRow({
           />
         </span>
       </button>
-      <div className="flex min-w-0 flex-1 items-center gap-2 border-b border-stone-200 py-2.5 pr-3 group-last:border-b-0">
+      <div className={rowBodyClass}>
         <div className="min-w-0 flex-1">
           <p className={`truncate text-[17px] leading-snug ${settled ? 'text-stone-400' : 'text-stone-900'}`}>
             {marks && (
@@ -72,6 +80,18 @@ export function TaskRow({
             {describeTask(task, timeZone)}
           </p>
         </div>
+        {!done && canUndo && task.done > 0 && (
+          <button
+            type="button"
+            onClick={() => onUndo(task)}
+            disabled={busy !== null}
+            aria-label={`Undo the last ${task.name} log`}
+            title="Undo the last log"
+            className="grid size-9 shrink-0 place-items-center rounded-full text-lg text-[#007aff] hover:bg-stone-100 disabled:text-stone-300"
+          >
+            ↺
+          </button>
+        )}
         {streak && (
           <span className="shrink-0 text-sm font-semibold text-orange-700" title="Current streak">
             🔥 {streak}

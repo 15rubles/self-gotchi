@@ -1,22 +1,15 @@
 import type { TaskState, TaskStatus } from '../api/types'
-import { TaskRow } from './TaskRow'
-
-/**
- * iOS Reminders-style colors: `ring` is the circle (system colors), `text` a darker shade of the
- * same hue so section titles stay readable on white (≥ 4.5:1).
- */
-export interface GroupColor {
-  ring: string
-  text: string
-}
+import { ListSection } from '../ui/ListSection'
+import { LIST_COLORS, type ListColor } from '../ui/listStyles'
+import { TaskRow, type RowBusy } from './TaskRow'
 
 /** Display order: due soon first, then whatever needs attention. */
-const groups: { status: TaskStatus; title: string; color: GroupColor }[] = [
-  { status: 'DUE_SOON', title: 'Due soon', color: { ring: '#ff9500', text: '#c93400' } },
-  { status: 'MISSED', title: 'Needs attention', color: { ring: '#ff3b30', text: '#d70015' } },
-  { status: 'UPCOMING', title: 'Later', color: { ring: '#007aff', text: '#0063cc' } },
-  { status: 'DONE', title: 'Done', color: { ring: '#8e8e93', text: '#6c6c70' } },
-  { status: 'OFF', title: 'Not today', color: { ring: '#c7c7cc', text: '#6c6c70' } },
+const groups: { status: TaskStatus; title: string; color: ListColor }[] = [
+  { status: 'DUE_SOON', title: 'Due soon', color: LIST_COLORS.orange },
+  { status: 'MISSED', title: 'Needs attention', color: LIST_COLORS.red },
+  { status: 'UPCOMING', title: 'Later', color: LIST_COLORS.blue },
+  { status: 'DONE', title: 'Done', color: LIST_COLORS.gray },
+  { status: 'OFF', title: 'Not today', color: LIST_COLORS.lightGray },
 ]
 
 function byDeadline(a: TaskState, b: TaskState): number {
@@ -25,17 +18,20 @@ function byDeadline(a: TaskState, b: TaskState): number {
   return b.severity - a.severity || da - db || a.sortOrder - b.sortOrder
 }
 
-/** Today's habits as Reminders-style lists: a colored title per group, rows on a white card. */
+/** Today's habits as Reminders-style lists, one per status group. */
 export function TaskList({
   tasks,
   timeZone,
-  busyTaskId,
+  busy,
   onComplete,
+  onUndo,
 }: {
   tasks: TaskState[]
   timeZone: string
-  busyTaskId: number | null
+  /** The habit being saved right now, and which way. */
+  busy: { taskId: number; action: RowBusy } | null
   onComplete: (task: TaskState) => void
+  onUndo: (task: TaskState) => void
 }) {
   return (
     <div className="space-y-6">
@@ -43,28 +39,19 @@ export function TaskList({
         const inGroup = tasks.filter((t) => t.status === status).sort(byDeadline)
         if (inGroup.length === 0) return null
         return (
-          <section key={status} aria-labelledby={`group-${status}`}>
-            <div className="mb-1.5 flex items-baseline justify-between px-1">
-              <h2 id={`group-${status}`} className="text-xl font-bold" style={{ color: color.text }}>
-                {title}
-              </h2>
-              <span className="text-lg font-semibold text-stone-400" aria-label={`${inGroup.length} habits`}>
-                {inGroup.length}
-              </span>
-            </div>
-            <ul className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/5">
-              {inGroup.map((task) => (
-                <TaskRow
-                  key={task.id}
-                  task={task}
-                  color={color}
-                  timeZone={timeZone}
-                  busy={busyTaskId === task.id}
-                  onComplete={onComplete}
-                />
-              ))}
-            </ul>
-          </section>
+          <ListSection key={status} id={`group-${status}`} title={title} color={color} count={inGroup.length}>
+            {inGroup.map((task) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                color={color}
+                timeZone={timeZone}
+                busy={busy?.taskId === task.id ? busy.action : null}
+                onComplete={onComplete}
+                onUndo={onUndo}
+              />
+            ))}
+          </ListSection>
         )
       })}
     </div>

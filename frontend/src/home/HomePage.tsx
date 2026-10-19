@@ -28,6 +28,13 @@ export function HomePage() {
     undo.mutate(target.completionId)
   }
 
+  /** Takes back a habit's latest log (tapping a filled circle, or ↺ on a partly done habit). */
+  const onUndoTask = (task: TaskState) => {
+    if (task.latestCompletionId === null) return
+    if (undoTarget?.completionId === task.latestCompletionId) setUndoTarget(null)
+    undo.mutate(task.latestCompletionId)
+  }
+
   if (isPending) {
     return <p className="p-8 text-center text-stone-500">Waking your character up…</p>
   }
@@ -40,6 +47,12 @@ export function HomePage() {
         </button>
       </div>
     )
+  }
+
+  const busyRow = (tasks: TaskState[]) => {
+    if (complete.isPending && complete.variables !== undefined) return { taskId: complete.variables, action: 'complete' as const }
+    const undoing = undo.isPending ? tasks.find((t) => t.latestCompletionId === undo.variables) : undefined
+    return undoing ? { taskId: undoing.id, action: 'undo' as const } : null
   }
 
   const bestStreak = Math.max(0, ...state.tasks.map((t) => t.streak))
@@ -74,8 +87,9 @@ export function HomePage() {
         <TaskList
           tasks={state.tasks}
           timeZone={state.timezone}
-          busyTaskId={complete.isPending ? (complete.variables ?? null) : null}
+          busy={busyRow(state.tasks)}
           onComplete={onComplete}
+          onUndo={onUndoTask}
         />
       )}
 
