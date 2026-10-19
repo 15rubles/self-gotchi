@@ -6,6 +6,7 @@ import { formatDay, formatTime, rewardName } from '../lib/format'
 import { celebrationsFor } from './celebrations'
 import { CelebrationToast } from './CelebrationToast'
 import { NewHabitLink } from '../tasks/NewHabitLink'
+import { PageTitle } from '../ui/ListSection'
 import { TaskList } from './TaskList'
 import { UndoToast, type UndoTarget } from './UndoToast'
 
@@ -95,7 +96,7 @@ export function HomePage() {
         </p>
       )}
 
-      <NewHabitLink className="w-fit px-1" />
+      <PageTitle title="Habits" action={<NewHabitLink returnTo="/" />} />
 
       {state.tasks.length === 0 ? (
         <p className="rounded-2xl border-2 border-dashed border-sep p-6 text-center text-label-2">

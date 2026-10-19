@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { ApiError } from '../api/client'
 import { useArchiveTask, useSaveTask, useTask } from '../api/hooks'
 import { DAY_CODES, type Category, type DayCode, type TaskDefinition, type TaskType } from '../api/types'
@@ -41,6 +41,9 @@ export function TaskEditorPage() {
  */
 function Editor({ task }: { task?: TaskDefinition }) {
   const navigate = useNavigate()
+  // Opened from Home ("+ New habit" there passes returnTo): go back there afterwards.
+  const returnTo = (useLocation().state as { returnTo?: string } | null)?.returnTo
+  const back = returnTo?.startsWith('/') ? returnTo : undefined
   const save = useSaveTask()
   const archive = useArchiveTask()
   const initial = task ? formFromTask(task) : emptyForm
@@ -69,7 +72,7 @@ function Editor({ task }: { task?: TaskDefinition }) {
     save.mutate(
       { id: task?.id, input: inputFromForm(form) },
       {
-        onSuccess: (saved) => navigate(task ? '/tasks' : `/tasks/${saved.id}`, { replace: !task }),
+        onSuccess: (saved) => navigate(back ?? (task ? '/tasks' : `/tasks/${saved.id}`), { replace: !task }),
         onError: (e) => {
           if (e instanceof ApiError && e.problem.errors) {
             setErrors(Object.fromEntries(e.problem.errors.map((fe) => [fe.field, fe.message])))
@@ -81,12 +84,12 @@ function Editor({ task }: { task?: TaskDefinition }) {
 
   const onCancel = () => {
     if (dirty && !window.confirm('Discard your changes?')) return
-    navigate('/tasks')
+    navigate(back ?? '/tasks')
   }
 
   const onArchive = () => {
     if (!task || !window.confirm(`Archive "${task.name}"? It disappears from today and the character; its history stays.`)) return
-    archive.mutate(task.id, { onSuccess: () => navigate('/tasks') })
+    archive.mutate(task.id, { onSuccess: () => navigate(back ?? '/tasks') })
   }
 
   const err = (field: string) => errors[field]
