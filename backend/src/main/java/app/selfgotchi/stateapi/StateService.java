@@ -20,6 +20,7 @@ import app.selfgotchi.state.HistoryCalculator;
 import app.selfgotchi.state.LogicalDay;
 import app.selfgotchi.state.Rewards;
 import app.selfgotchi.state.StateEngine;
+import app.selfgotchi.state.model.CheckSchedule;
 import app.selfgotchi.state.model.CompletionLog;
 import app.selfgotchi.state.model.TaskDef;
 import app.selfgotchi.state.model.TaskEvaluation;
@@ -64,7 +65,8 @@ public class StateService {
             TaskEvaluation e = evaluation.tasks().get(i);
             taskStates.add(new StateResponse.TaskState(task.getId(), task.getName(), task.getCategory(),
                 task.getType(), task.getEffectKey(), task.getSortOrder(), e.status(), e.severity(), e.dueAt(),
-                e.done(), e.target(), e.streak(), e.daysSinceDone(), e.latestCompletionId()));
+                e.done(), e.target(), e.streak(), e.daysSinceDone(), e.latestCompletionId(),
+                defs.get(i).schedule() instanceof CheckSchedule check ? check.date() : null));
         }
         return new StateResponse(when, at != null, evaluation.logicalDate(), user.getZoneId().getId(),
             evaluation.character(), taskStates, rewards(user, when, evaluation.logicalDate()));

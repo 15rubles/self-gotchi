@@ -437,7 +437,8 @@ class ApiIntegrationTest {
                 {"name": "Dentist", "category": "MENTAL", "effectKey": "GENERIC",
                  "schedule": {"type": "CHECK", "recurrence": "ONCE", "date": "2026-10-07", "deadline": "15:00"}}""");
 
-            call(get("/api/v1/state")).andExpect(jsonPath("$.tasks[0].status").value("OFF"));
+            call(get("/api/v1/state")).andExpect(jsonPath("$.tasks[0].status").value("OFF"))
+                .andExpect(jsonPath("$.tasks[0].onceOn").value("2026-10-07"));
             clock.set(berlin("2026-10-07T14:30"));
             call(get("/api/v1/state")).andExpect(jsonPath("$.tasks[0].status").value("DUE_SOON"));
         }

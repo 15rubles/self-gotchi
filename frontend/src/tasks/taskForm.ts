@@ -1,4 +1,5 @@
 import type { Category, DayCode, EffectKey, Schedule, TaskDefinition, TaskInput, TaskType } from '../api/types'
+import { formatDate } from '../lib/dates'
 import { EFFECTS } from '../lib/effects'
 
 /**
@@ -10,7 +11,8 @@ export interface TaskForm {
   category: Category
   effectKey: EffectKey
   type: TaskType
-  check: { deadline: string; days: DayCode[]; dueSoonMinutes: number }
+  /** repeats = false: a one-time checkmark on `date` */
+  check: { deadline: string; days: DayCode[]; dueSoonMinutes: number; repeats: boolean; date: string }
   meterMode: 'slots' | 'count'
   meter: { slots: string[]; count: number; minGapMinutes: number; firstBy: string; lastBy: string }
   quota: { timesPerWeek: number; weekStarts: DayCode }
@@ -22,7 +24,7 @@ export const emptyForm: TaskForm = {
   category: 'PHYSICAL',
   effectKey: 'MOUTH_SMELL',
   type: 'CHECK',
-  check: { deadline: '21:00', days: [], dueSoonMinutes: 60 },
+  check: { deadline: '21:00', days: [], dueSoonMinutes: 60, repeats: true, date: '' },
   meterMode: 'slots',
   meter: { slots: ['10:00', '23:30'], count: 3, minGapMinutes: 0, firstBy: '11:00', lastBy: '21:00' },
   quota: { timesPerWeek: 3, weekStarts: 'MON' },
@@ -30,7 +32,7 @@ export const emptyForm: TaskForm = {
 }
 
 export const TYPE_INFO: Record<TaskType, { title: string; blurb: string }> = {
-  CHECK: { title: 'Checkmark', blurb: 'Once a day, before a deadline' },
+  CHECK: { title: 'Checkmark', blurb: 'Done by a deadline: every day, on some weekdays, or once on a date' },
   METER: { title: 'Meter', blurb: 'Several times a day' },
   QUOTA: { title: 'Weekly quota', blurb: 'X times per week, judged on pace' },
   FRESHNESS: { title: 'Freshness', blurb: 'Every few days; gets worse the longer you wait' },
@@ -41,7 +43,13 @@ export function formFromTask(task: TaskDefinition): TaskForm {
   const s = task.schedule
   switch (s.type) {
     case 'CHECK':
-      form.check = { deadline: s.deadline, days: s.days ?? [], dueSoonMinutes: s.dueSoonMinutes ?? 60 }
+      form.check = {
+        deadline: s.deadline,
+        days: s.days ?? [],
+        dueSoonMinutes: s.dueSoonMinutes ?? 60,
+        repeats: s.recurrence !== 'ONCE',
+        date: s.date ?? '',
+      }
       break
     case 'METER':
       if (s.slots && s.slots.length > 0) {
@@ -68,7 +76,9 @@ export function formFromTask(task: TaskDefinition): TaskForm {
 export function scheduleFromForm(form: TaskForm): Schedule {
   switch (form.type) {
     case 'CHECK':
-      return { type: 'CHECK', recurrence: 'DAILY', days: form.check.days, deadline: form.check.deadline, dueSoonMinutes: form.check.dueSoonMinutes }
+      return form.check.repeats
+        ? { type: 'CHECK', recurrence: 'DAILY', days: form.check.days, deadline: form.check.deadline, dueSoonMinutes: form.check.dueSoonMinutes }
+        : { type: 'CHECK', recurrence: 'ONCE', date: form.check.date, deadline: form.check.deadline, dueSoonMinutes: form.check.dueSoonMinutes }
     case 'METER':
       return form.meterMode === 'slots'
         ? { type: 'METER', slots: form.meter.slots.map((by) => ({ by })), minGapMinutes: form.meter.minGapMinutes }
@@ -110,6 +120,7 @@ export function validate(form: TaskForm): FieldErrors {
   switch (form.type) {
     case 'CHECK':
       if (!TIME.test(form.check.deadline)) errors['schedule.deadline'] = 'Pick a time'
+      if (!form.check.repeats && !/^d{4}-d{2}-d{2}$/.test(form.check.date)) errors['schedule.date'] = 'Pick a date'
       if (!int(form.check.dueSoonMinutes) || form.check.dueSoonMinutes < 0 || form.check.dueSoonMinutes > 720) {
         errors['schedule.dueSoonMinutes'] = '0 to 720 minutes'
       }
@@ -150,6 +161,7 @@ export function validate(form: TaskForm): FieldErrors {
 export function describeSchedule(s: Schedule): string {
   switch (s.type) {
     case 'CHECK': {
+      if (s.recurrence === 'ONCE' && s.date) return `Once on ${formatDate(s.date)} by ${s.deadline}`
       const days = s.days && s.days.length > 0 && s.days.length < 7 ? ` on ${s.days.map(cap).join(', ')}` : ' every day'
       return `By ${s.deadline}${days}`
     }

@@ -4,12 +4,16 @@ import { NewHabitLink } from "./NewHabitLink";
 import { useTasks } from "../api/hooks";
 import type { TaskDefinition } from "../api/types";
 import { effectEmoji } from "../lib/format";
-import { ListSection, PageTitle, Switch } from "../ui/ListSection";
+import { Card, ListSection, PageTitle, Switch } from "../ui/ListSection";
 import { LIST_COLORS, rowBodyClass, type ListColor } from "../ui/listStyles";
 import { TYPE_INFO, describeSchedule } from "./taskForm";
 import { ChevronRightIcon } from "../ui/Icons";
 
-/** Habit definitions in the same Reminders style as the home screen: physical, mental, archived. */
+const isOnce = (t: TaskDefinition) => t.schedule.type === "CHECK" && t.schedule.recurrence === "ONCE";
+/** "2026-10-07 15:00": sorts one-time habits by when they happen. */
+const onceKey = (t: TaskDefinition) => (t.schedule.type === "CHECK" ? `${t.schedule.date} ${t.schedule.deadline}` : "");
+
+/** Habit definitions in the same Reminders style as the home screen: physical, mental, one-time, archived. */
 export function TasksPage() {
   const [showArchived, setShowArchived] = useState(false);
   const { data: tasks, isPending, error, refetch } = useTasks(showArchived);
@@ -24,13 +28,19 @@ export function TasksPage() {
       id: "physical",
       title: "Physical",
       color: LIST_COLORS.green,
-      items: tasks?.filter((t) => t.active && t.category === "PHYSICAL") ?? [],
+      items: tasks?.filter((t) => t.active && !isOnce(t) && t.category === "PHYSICAL") ?? [],
     },
     {
       id: "mental",
       title: "Mental",
       color: LIST_COLORS.purple,
-      items: tasks?.filter((t) => t.active && t.category === "MENTAL") ?? [],
+      items: tasks?.filter((t) => t.active && !isOnce(t) && t.category === "MENTAL") ?? [],
+    },
+    {
+      id: "once",
+      title: "One-time",
+      color: LIST_COLORS.orange,
+      items: (tasks?.filter((t) => t.active && isOnce(t)) ?? []).sort((a, b) => onceKey(a).localeCompare(onceKey(b))),
     },
     {
       id: "archived",
@@ -85,6 +95,15 @@ export function TasksPage() {
         onChange={setShowArchived}
         label="Show archived"
       />
+
+      <Card as="ul">
+        <li>
+          <Link to="/import" className="flex items-center justify-between px-4 py-2.5 text-[17px] text-tint hover:bg-fill">
+            Import from calendar
+            <ChevronRightIcon size={16} className="text-label-3" />
+          </Link>
+        </li>
+      </Card>
     </div>
   );
 }

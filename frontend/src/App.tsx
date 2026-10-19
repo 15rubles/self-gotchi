@@ -2,6 +2,7 @@ import { NavLink, Route, Routes } from 'react-router'
 import { GalleryPage } from './gallery/GalleryPage'
 import { HistoryPage } from './history/HistoryPage'
 import { HomePage } from './home/HomePage'
+import { ImportPage } from './import/ImportPage'
 import { useTheme } from './lib/theme'
 import { SettingsPage } from './settings/SettingsPage'
 import { TaskEditorPage } from './tasks/TaskEditorPage'
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="/tasks/:id" element={<TaskEditorPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/import" element={<ImportPage />} />
           <Route path="/gallery" element={<GalleryPage />} />
           <Route path="*" element={<HomePage />} />
         </Routes>

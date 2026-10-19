@@ -112,3 +112,35 @@ export function Stepper({
     </span>
   )
 }
+
+/** iOS switch for use inside a form row (the label is the row's). */
+export function ToggleSwitch({ id, checked, onChange }: { id: string; checked: boolean; onChange: (checked: boolean) => void }) {
+  return (
+    <button
+      id={id}
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors ${checked ? 'bg-[#34c759]' : 'bg-fill-2'}`}
+    >
+      {/* the knob stays white in dark mode too, as on iOS */}
+      <span className={`absolute top-[2px] left-[2px] size-[27px] rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : ''}`} />
+    </button>
+  )
+}
+
+export function InlineDate({ id, value, error, onChange }: { id: string; value: string; error?: string; onChange: (value: string) => void }) {
+  return (
+    <input
+      id={id}
+      type="date"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      required
+      aria-invalid={Boolean(error)}
+      aria-describedby={error ? `${id}-error` : undefined}
+      className={`${inlineControl} ${error ? 'outline-2 outline-danger' : ''}`}
+    />
+  )
+}

@@ -28,7 +28,8 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   const method = (init.method ?? 'GET').toUpperCase()
   const headers = new Headers(init.headers)
   headers.set('Accept', 'application/json')
-  if (init.body !== undefined) headers.set('Content-Type', 'application/json')
+  // A FormData upload sets its own multipart Content-Type (with the boundary).
+  if (init.body !== undefined && !(init.body instanceof FormData)) headers.set('Content-Type', 'application/json')
   if (method !== 'GET' && method !== 'HEAD') {
     const token = readCookie('XSRF-TOKEN')
     if (token) headers.set('X-XSRF-TOKEN', decodeURIComponent(token))

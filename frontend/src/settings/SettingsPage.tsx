@@ -1,11 +1,13 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
+import { RowIcon } from '../ui/FormRows'
 import { ApiError, logout } from '../api/client'
 import { useMe, useUpdateMe, type MeInput } from '../api/hooks'
 import type { Me } from '../api/types'
 import { useTheme, type Theme } from '../lib/theme'
 import { Group, PageTitle } from '../ui/ListSection'
 import { rowBodyClass } from '../ui/listStyles'
-import { CheckIcon } from '../ui/Icons'
+import { CheckIcon, ChevronRightIcon } from '../ui/Icons'
 
 const THEMES: { value: Theme; label: string }[] = [
   { value: 'system', label: 'Automatic' },
@@ -49,6 +51,20 @@ export function SettingsPage() {
       </Group>
 
       {me ? <AccountGroup me={me} /> : <Group title="Account">{<li className="px-4 py-3 text-label-2">Loading…</li>}</Group>}
+
+      <Group title="Import" footer="Turn Google, Outlook or Apple calendar events into habits.">
+        <li className="group">
+          <Link to="/import" className="flex w-full items-stretch pl-4 hover:bg-fill active:bg-fill">
+            <span className="flex items-center pr-3">
+              <RowIcon emoji="📆" color="#ff3b30" />
+            </span>
+            <span className={rowBodyClass}>
+              <span className="flex-1 text-[17px]">Import from calendar</span>
+              <ChevronRightIcon size={16} className="text-label-3" />
+            </span>
+          </Link>
+        </li>
+      </Group>
 
       <Group title="Session">
         <li className="group">

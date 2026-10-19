@@ -35,6 +35,8 @@ public record StateResponse(Instant at, boolean preview, LocalDate logicalDate, 
         int target,
         int streak,
         Integer daysSinceDone,
-        Long latestCompletionId) {
+        Long latestCompletionId,
+        /* a one-time checkmark's date, null for repeating habits */
+        LocalDate onceOn) {
     }
 }

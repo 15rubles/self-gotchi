@@ -104,7 +104,8 @@ export function HomePage() {
         </p>
       ) : (
         <TaskList
-          tasks={state.tasks}
+          // One-time habits (e.g. imported appointments) only show on their own day.
+          tasks={state.tasks.filter((t) => !t.onceOn || t.onceOn === state.logicalDate)}
           timeZone={state.timezone}
           busy={busyRow(state.tasks)}
           onComplete={onComplete}

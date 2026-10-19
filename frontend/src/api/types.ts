@@ -48,6 +48,8 @@ export interface TaskState {
   streak: number
   daysSinceDone: number | null
   latestCompletionId: number | null
+  /** A one-time checkmark's date ("2026-10-07"); null for repeating habits */
+  onceOn: string | null
 }
 
 export interface StateResponse {
@@ -111,9 +113,12 @@ export const DAY_CODES: DayCode[] = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', '
 
 export interface CheckSchedule {
   type: 'CHECK'
-  recurrence?: 'DAILY'
-  /** empty = every day */
+  /** DAILY repeats (optionally on some weekdays); ONCE happens on `date` only */
+  recurrence?: 'DAILY' | 'ONCE'
+  /** DAILY: empty = every day; ONCE: empty */
   days?: DayCode[]
+  /** ONCE: the day, "2026-10-07" */
+  date?: string
   /** HH:mm */
   deadline: string
   dueSoonMinutes?: number
@@ -161,6 +166,33 @@ export interface TaskInput {
   effectKey: EffectKey
   schedule: Schedule
   sortOrder?: number
+  /** Create only: the calendar event (UID) it was imported from */
+  importUid?: string
+}
+
+// ---- calendar import -------------------------------------------------------------------------
+
+/** One calendar event (a whole series if recurring) proposed as a checkmark habit. */
+export interface ImportCandidate {
+  uid: string
+  name: string
+  recurring: boolean
+  /** Java weekday names, "MONDAY"...; empty = every day */
+  days: string[]
+  /** One-off: the day; recurring: when the series started */
+  date: string
+  /** "19:00:00" */
+  deadline: string
+  allDay: boolean
+  alreadyImported: boolean
+  notes: string[]
+}
+
+export interface ImportPreview {
+  events: ImportCandidate[]
+  skippedPast: number
+  skippedCancelled: number
+  skippedEnded: number
 }
 
 // ---- history -------------------------------------------------------------------------------
