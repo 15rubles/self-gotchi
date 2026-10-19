@@ -21,3 +21,6 @@ export const LIST_COLORS = {
 /** The text part of a row: hairline divider that starts at the text, none after the last row. */
 export const rowBodyClass = 'flex min-w-0 flex-1 items-center gap-2 border-b border-sep py-2.5 pr-3 group-last:border-b-0'
 
+
+/** Inline value controls that sit at the right end of a form row (time, select). */
+export const inlineControl = 'rounded-lg bg-fill px-2 py-1 text-[17px] text-label tabular-nums focus:outline-2 focus:outline-tint'

@@ -70,10 +70,10 @@ export function Switch({ checked, onChange, label }: { checked: boolean; onChang
 }
 
 /** iOS Settings-style group: small grey header, a card of rows, optional footnote. */
-export function Group({ title, footer, children }: { title: string; footer?: ReactNode; children: ReactNode }) {
+export function Group({ title, footer, children }: { title?: string; footer?: ReactNode; children: ReactNode }) {
   return (
     <section>
-      <h2 className="mb-1.5 px-4 text-[13px] text-label-2 uppercase">{title}</h2>
+      {title && <h2 className="mb-1.5 px-4 text-[13px] text-label-2 uppercase">{title}</h2>}
       <Card as="ul">{children}</Card>
       {footer && <p className="mt-1.5 px-4 text-[13px] text-label-2">{footer}</p>}
     </section>
