@@ -149,3 +149,9 @@ Choices made where `DESIGN.md` is ambiguous or silent. Newest at the bottom of e
 - Theme choice: Automatic (follows the OS, live), Light, Dark, in **Settings → Appearance**. Saved per device in `localStorage` (`sg-theme`), like the OS setting it mirrors; an inline script in `index.html` applies it before the first paint so dark mode never flashes white. `<meta name="theme-color">` follows the theme (PWA title bar).
 - Settings also shows the account (name, email, time zone, day start; read-only, still set via `APP_USER_TIMEZONE` / `APP_DAY_RESET_HOUR`) and Log out, which moved there from the header. `/settings` is forwarded to the app shell by `SpaController`.
 - History uses the shared iOS look: large title, a "Show" menu row (all habits or one), the calendar and legend on one card, streaks as a two-stat card, the selected day as a list (tinted emoji, name, grey result line, colored result badge), and the "Show archived" switch.
+
+## Editable settings (milestone 8)
+- `PUT /api/v1/me` `{displayName, timezone, dayResetHour}`, all required. Time zone must be a region id from `ZoneId.getAvailableZoneIds()` (`Europe/Berlin`); fixed offsets like `+02:00` are rejected because they have no daylight-saving rules. Reset hour 0–23, name 1–60 characters (trimmed). Field errors use the usual problem-details format.
+- **Supersedes** the milestone 4 rule above: `APP_USER_TIMEZONE` / `APP_DAY_RESET_HOUR` now only seed a **new** users row. Settings is the source of truth after that, so a restart never undoes a change made in the app.
+- Changing the zone or reset hour re-sorts past completions into days (state and history are always derived from the log); nothing stored is rewritten.
+- The Settings screen saves each change right away (iOS style): the name on blur/Enter, zone and hour on selection. The zone list is the browser's `Intl.supportedValuesOf('timeZone')`, with a one-tap "Use this device's time zone".

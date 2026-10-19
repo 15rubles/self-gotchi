@@ -14,8 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 import app.selfgotchi.state.EngineConfig;
 
 /**
- * Creates the users row for the configured login on startup, and applies an explicitly
- * configured time zone / reset hour to it. The login name is the user's email.
+ * Creates the users row for the configured login on startup. The configured time zone / reset
+ * hour only seed a new row: after that, Settings ({@code PUT /api/v1/me}) owns them, so a
+ * restart never undoes a change made in the app. The login name is the user's email.
  */
 @Component
 @Order(0)
@@ -47,11 +48,6 @@ public class UserBootstrap implements ApplicationRunner {
         int resetHour = props.dayResetHour() == null ? EngineConfig.DEFAULT_RESET_HOUR : props.dayResetHour();
 
         return users.findByEmail(auth.username())
-            .map(user -> {
-                user.updateSettings(zoneConfigured ? zone : user.getZoneId(),
-                    props.dayResetHour() == null ? user.getDayResetHour() : resetHour);
-                return user;
-            })
             .orElseGet(() -> {
                 log.info("Creating user {} (time zone {}, day resets at {}:00)", auth.username(), zone, resetHour);
                 return users.save(new User(auth.username(), props.displayName(), zone, resetHour, clock.instant()));

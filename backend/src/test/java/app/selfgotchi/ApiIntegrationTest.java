@@ -119,6 +119,83 @@ class ApiIntegrationTest {
         }
     }
 
+    // ---- settings -----------------------------------------------------------------------------
+
+    @Nested
+    class Settings {
+
+        static final String UPDATE = """
+            {"displayName": "Lesha", "timezone": "Asia/Tokyo", "dayResetHour": 3}""";
+
+        @Test
+        void updateChangesNameZoneAndResetHour() throws Exception {
+            send(put("/api/v1/me"), UPDATE)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.displayName").value("Lesha"))
+                .andExpect(jsonPath("$.timezone").value("Asia/Tokyo"))
+                .andExpect(jsonPath("$.dayResetHour").value(3));
+
+            call(get("/api/v1/me"))
+                .andExpect(jsonPath("$.timezone").value("Asia/Tokyo"))
+                .andExpect(jsonPath("$.email").value(IntegrationTest.USER));
+        }
+
+        @Test
+        void unknownTimeZoneIsAFieldError() throws Exception {
+            send(put("/api/v1/me"), """
+                {"displayName": "Lesha", "timezone": "Mars/Olympus", "dayResetHour": 4}""")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].field").value("timezone"));
+        }
+
+        @Test
+        void offsetsAreNotTimeZones() throws Exception {
+            // "+02:00" has no daylight-saving rules, so deadlines would drift twice a year.
+            send(put("/api/v1/me"), """
+                {"displayName": "Lesha", "timezone": "+02:00", "dayResetHour": 4}""")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].field").value("timezone"));
+        }
+
+        @Test
+        void resetHourMustBeAnHourOfTheDay() throws Exception {
+            send(put("/api/v1/me"), """
+                {"displayName": "Lesha", "timezone": "Europe/Berlin", "dayResetHour": 24}""")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].field").value("dayResetHour"));
+        }
+
+        @Test
+        void nameMustNotBeBlank() throws Exception {
+            send(put("/api/v1/me"), """
+                {"displayName": "   ", "timezone": "Europe/Berlin", "dayResetHour": 4}""")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].field").value("displayName"));
+        }
+
+        @Test
+        void changingTheResetHourMovesALateNightCompletionToTheNextDay() throws Exception {
+            long id = createTask(PREP_FOOD); // checkmark by 22:00, created 2026-10-01 12:00
+            clock.set(berlin("2026-10-02T01:40"));
+            send(post("/api/v1/tasks/" + id + "/complete"), """
+                {"completedAt": "%s"}""".formatted(berlin("2026-10-02T01:30")))
+                .andExpect(status().isCreated());
+
+            // 04:00 reset: 01:30 still belongs to Oct 1, so Oct 1 was done late.
+            call(get("/api/v1/history").param("from", "2026-10-01").param("to", "2026-10-01"))
+                .andExpect(jsonPath("$.tasks[0].days[0].result").value("LATE"));
+
+            send(put("/api/v1/me"), """
+                {"displayName": "Lesha", "timezone": "Europe/Berlin", "dayResetHour": 0}""")
+                .andExpect(status().isOk());
+
+            // Midnight reset: 01:30 is Oct 2 now, so Oct 1 was missed and Oct 2 is done.
+            call(get("/api/v1/history").param("from", "2026-10-01").param("to", "2026-10-02"))
+                .andExpect(jsonPath("$.tasks[0].days[0].result").value("MISSED"))
+                .andExpect(jsonPath("$.tasks[0].days[1].result").value("ON_TIME"));
+        }
+    }
+
     // ---- tasks --------------------------------------------------------------------------------
 
     @Nested

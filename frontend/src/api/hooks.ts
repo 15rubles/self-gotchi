@@ -29,6 +29,21 @@ export function useMe() {
   return useQuery({ queryKey: ['me'], queryFn: () => apiFetch<Me>('me'), staleTime: Infinity })
 }
 
+export type MeInput = Pick<Me, 'displayName' | 'timezone' | 'dayResetHour'>
+
+/** Saves name / time zone / day start. Days are re-derived from the log, so state and history refetch. */
+export function useUpdateMe() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (input: MeInput) => apiFetch<Me>('me', { method: 'PUT', body: JSON.stringify(input) }),
+    onSuccess: (me) => {
+      client.setQueryData(['me'], me)
+      void client.invalidateQueries({ queryKey: stateKey })
+      void client.invalidateQueries({ queryKey: ['history'] })
+    },
+  })
+}
+
 export function useCompleteTask() {
   const client = useQueryClient()
   return useMutation({

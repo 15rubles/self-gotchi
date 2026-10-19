@@ -52,6 +52,10 @@ public class User {
         this.dayResetHour = (short) dayResetHour;
     }
 
+    public void rename(String displayName) {
+        this.displayName = displayName;
+    }
+
     public void markSeeded(Instant now) {
         this.seededAt = now;
     }

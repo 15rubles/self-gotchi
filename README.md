@@ -58,7 +58,7 @@ Open http://localhost:5173 and sign in with **`aleksei@selfgotchi.local` / `chan
 
 On first start the backend:
 
-- creates your user (time zone = your computer's, unless `APP_USER_TIMEZONE` is set);
+- creates your user (time zone = your computer's, unless `APP_USER_TIMEZONE` is set; change it any time in **Settings**);
 - adds the six habits from the design doc: brush teeth, eat, work out, clean your place,
   prepare food for tomorrow, homework (Mon–Thu). This happens once per user and never again
   after you edit or archive them.
@@ -90,8 +90,8 @@ Environment variables (all optional):
 | --- | --- | --- |
 | `APP_USERNAME` / `APP_PASSWORD` | `aleksei@selfgotchi.local` / `changeme` | The single login (the username is the user's email). **Change both for any real use.** |
 | `APP_USER_DISPLAY_NAME` | `Aleksei` | Display name |
-| `APP_USER_TIMEZONE` | your computer's zone | IANA zone, e.g. `Europe/Berlin`. Applied on every start when set. |
-| `APP_DAY_RESET_HOUR` | `4` | Hour (0–23) a new day starts. Applied on every start when set. |
+| `APP_USER_TIMEZONE` | your computer's zone | IANA zone, e.g. `Europe/Berlin`. Only used when your user is first created; change it later in Settings. |
+| `APP_DAY_RESET_HOUR` | `4` | Hour (0–23) a new day starts. Only used when your user is first created; change it later in Settings. |
 | `APP_SEED` | `true` | Add the six default habits once for a new user |
 | `DB_URL` / `DB_USER` / `DB_PASSWORD` | local Docker Postgres | Database connection |
 | `PORT` | `8080` | API port |
