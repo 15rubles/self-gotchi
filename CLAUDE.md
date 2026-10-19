@@ -24,6 +24,7 @@ npm install
 npm run dev                                # :5173, proxies /api, /login, /logout to :8080
 npm run build                              # type-check + production build
 npm run lint
+npm run art:generate                       # shared room/effect/icon art into src/character/art (committed; needs OPENAI_API_KEY)
 npm run avatar:generate                    # chibi avatar frames from src/local-avatar/photo.jpg (needs OPENAI_API_KEY; sends the photo to OpenAI)
 
 # One origin (installable PWA): build the frontend, then the backend serves frontend/dist on :8080

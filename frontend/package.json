@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "avatar:generate": "node scripts/generate-avatar.mjs"
+    "avatar:generate": "node scripts/generate-avatar.mjs",
+    "art:generate": "node scripts/generate-art.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.1",
