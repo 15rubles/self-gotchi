@@ -18,7 +18,7 @@ export function SeverityLadder({ effectKey }: { effectKey: EffectKey }) {
       {[1, 2, 3].map((severity) => (
         <figure key={severity}>
           <CharacterStage state={previewCharacter(effectKey, severity)} className={thumb} />
-          <figcaption className="mt-1 text-center text-xs leading-tight text-stone-600">
+          <figcaption className="mt-1 text-center text-xs leading-tight text-label-2">
             <span className="font-semibold">{severity}.</span> {info.levels[severity - 1]}
           </figcaption>
         </figure>
@@ -50,7 +50,7 @@ export function TimePreview({ taskId, dirty }: { taskId: number; dirty: boolean 
           <span className="font-semibold">
             {step === 0 ? 'Now-ish' : `${formatDay(label, tz)} ${formatTime(label, tz)}`}
           </span>
-          <span className="text-stone-500">{isFetching ? 'updating…' : 'drag to look ahead'}</span>
+          <span className="text-label-2">{isFetching ? 'updating…' : 'drag to look ahead'}</span>
         </span>
         <input
           type="range"
@@ -58,11 +58,11 @@ export function TimePreview({ taskId, dirty }: { taskId: number; dirty: boolean 
           max={STEPS}
           value={step}
           onChange={(e) => setStep(Number(e.target.value))}
-          className="mt-1 w-full accent-stone-800"
+          className="mt-1 w-full accent-tint"
           aria-label="Preview time"
         />
       </label>
-      {error && <p className="text-sm text-red-700">Couldn't load the preview.</p>}
+      {error && <p className="text-sm text-danger">Couldn't load the preview.</p>}
       {preview && (
         <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] items-center gap-3">
           <CharacterStage state={preview.character} className={thumb} />
@@ -72,17 +72,17 @@ export function TimePreview({ taskId, dirty }: { taskId: number; dirty: boolean 
                 <p className="font-semibold">
                   {statusText[task.status]} · severity {task.severity}
                 </p>
-                <p className="text-stone-600">{describeTask(task, tz)}</p>
+                <p className="text-label-2">{describeTask(task, tz)}</p>
               </>
             ) : (
-              <p className="text-stone-600">This habit isn't active at that time.</p>
+              <p className="text-label-2">This habit isn't active at that time.</p>
             )}
-            <p className="mt-2 text-xs text-stone-500">The character shows all your habits together.</p>
+            <p className="mt-2 text-xs text-label-2">The character shows all your habits together.</p>
           </div>
         </div>
       )}
       {dirty && (
-        <p className="rounded-lg bg-amber-100 px-2 py-1 text-xs text-amber-900">
+        <p className="rounded-lg bg-amber-100 px-2 py-1 text-xs text-amber-900 dark:bg-amber-950 dark:text-amber-200">
           The preview uses the saved version. Save to see your changes here.
         </p>
       )}

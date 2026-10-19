@@ -25,13 +25,13 @@ export function UndoToast({
   return (
     <div
       role="status"
-      className="fixed inset-x-0 bottom-4 z-20 mx-auto flex w-[calc(100%-2rem)] max-w-md items-center gap-3 rounded-2xl bg-stone-800 px-4 py-3 text-white shadow-lg"
+      className="fixed inset-x-0 bottom-4 z-20 mx-auto flex w-[calc(100%-2rem)] max-w-md items-center gap-3 rounded-2xl bg-inverse px-4 py-3 text-white shadow-lg"
     >
       <span className="flex-1 truncate">✓ {target.taskName}</span>
       <button
         type="button"
         onClick={() => onUndo(target)}
-        className="rounded-lg px-2 py-1 font-semibold text-lime-300 hover:bg-stone-700"
+        className="rounded-lg px-2 py-1 font-semibold text-lime-300 hover:bg-white/10"
       >
         Undo
       </button>

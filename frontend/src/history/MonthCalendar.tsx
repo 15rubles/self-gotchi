@@ -36,7 +36,7 @@ export function MonthCalendar({
 
   return (
     <div>
-      <div className="mb-1 grid grid-cols-7 gap-1 text-center text-xs font-semibold text-stone-500" aria-hidden>
+      <div className="mb-1 grid grid-cols-7 gap-1 text-center text-xs font-semibold text-label-2" aria-hidden>
         {WEEKDAYS.map((d) => (
           <div key={d}>{d}</div>
         ))}
@@ -60,11 +60,11 @@ export function MonthCalendar({
               aria-label={`${formatDate(date)}${c ? `, ${c.description}` : future ? ', upcoming' : ''}`}
               onClick={() => onSelect(date)}
               className={`flex aspect-square min-h-11 flex-col items-center justify-center rounded-lg text-sm leading-tight transition ${
-                c?.dashed ? 'border-2 border-dashed border-stone-400' : ''
-              } ${isSelected ? 'ring-2 ring-stone-900 ring-offset-2 ring-offset-amber-50' : ''} ${
-                future ? 'cursor-default text-stone-300' : 'cursor-pointer hover:brightness-95'
+                c?.dashed ? 'border-2 border-dashed border-label-3' : ''
+              } ${isSelected ? 'ring-2 ring-label ring-offset-2 ring-offset-card' : ''} ${
+                future ? 'cursor-default text-label-3' : 'cursor-pointer hover:brightness-95'
               } ${date === today ? 'font-bold' : ''}`}
-              style={c ? { backgroundColor: c.fill, color: c.ink } : { backgroundColor: future ? 'transparent' : '#f5f5f4' }}
+              style={c ? { backgroundColor: c.fill, color: c.ink } : { backgroundColor: future ? 'transparent' : 'var(--fill)' }}
             >
               <span>{day}</span>
               {c?.mark && <span className="text-[11px] font-semibold tabular-nums">{c.mark}</span>}

@@ -54,7 +54,7 @@ export function TaskRow({
       >
         <span
           className={`grid size-[22px] place-items-center rounded-full border-[1.5px] transition-colors ${off ? 'border-dashed' : ''}`}
-          style={{ borderColor: filled ? color.ring : off ? '#c7c7cc' : '#b4b4b9' }}
+          style={{ borderColor: filled ? color.ring : off ? 'var(--label-3)' : 'var(--ring-empty)' }}
           aria-hidden
         >
           <span
@@ -65,7 +65,7 @@ export function TaskRow({
       </button>
       <div className={rowBodyClass}>
         <div className="min-w-0 flex-1">
-          <p className={`truncate text-[17px] leading-snug ${settled ? 'text-stone-400' : 'text-stone-900'}`}>
+          <p className={`truncate text-[17px] leading-snug ${settled ? 'text-label-3' : 'text-label'}`}>
             {marks && (
               <span className="font-semibold" style={{ color: color.text }}>
                 {marks}{' '}
@@ -75,7 +75,7 @@ export function TaskRow({
           </p>
           <p
             className="truncate text-[15px] leading-snug"
-            style={{ color: task.status === 'MISSED' || task.status === 'DUE_SOON' ? color.text : '#8e8e93' }}
+            style={{ color: task.status === 'MISSED' || task.status === 'DUE_SOON' ? color.text : 'var(--label-2)' }}
           >
             {describeTask(task, timeZone)}
           </p>
@@ -87,7 +87,7 @@ export function TaskRow({
             disabled={busy !== null}
             aria-label={`Undo the last ${task.name} log`}
             title="Undo the last log"
-            className="grid size-9 shrink-0 place-items-center rounded-full text-lg text-[#007aff] hover:bg-stone-100 disabled:text-stone-300"
+            className="grid size-9 shrink-0 place-items-center rounded-full text-lg text-tint hover:bg-fill disabled:text-label-3"
           >
             ↺
           </button>

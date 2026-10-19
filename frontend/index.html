@@ -2,7 +2,17 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="theme-color" content="#fde68a" />
+    <meta name="theme-color" content="#fffbeb" />
+    <script>
+      // Apply the saved theme before the first paint (see src/lib/theme.ts, same storage key).
+      try {
+        var t = localStorage.getItem('sg-theme')
+        if (t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark')
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#000000')
+        }
+      } catch (e) {}
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Self-Gotchi</title>
   </head>

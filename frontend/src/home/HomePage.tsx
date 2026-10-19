@@ -36,13 +36,13 @@ export function HomePage() {
   }
 
   if (isPending) {
-    return <p className="p-8 text-center text-stone-500">Waking your character up…</p>
+    return <p className="p-8 text-center text-label-2">Waking your character up…</p>
   }
   if (error || !state) {
     return (
       <div className="p-8 text-center">
-        <p className="text-stone-600">Couldn't load your character.</p>
-        <button type="button" onClick={() => refetch()} className="mt-3 rounded-lg bg-stone-800 px-4 py-2 text-white">
+        <p className="text-label-2">Couldn't load your character.</p>
+        <button type="button" onClick={() => refetch()} className="mt-3 rounded-lg bg-label px-4 py-2 text-app">
           Try again
         </button>
       </div>
@@ -60,7 +60,7 @@ export function HomePage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-baseline justify-between text-sm text-stone-500">
+      <div className="flex items-baseline justify-between text-sm text-label-2">
         <span>
           {formatDay(state.at, state.timezone)} · {formatTime(state.at, state.timezone)}
         </span>
@@ -74,13 +74,13 @@ export function HomePage() {
       <CharacterStage state={state.character} celebrateKey={celebrateKey} />
 
       {mutationError && (
-        <p role="alert" className="rounded-xl bg-red-100 px-3 py-2 text-sm text-red-800">
+        <p role="alert" className="rounded-xl bg-danger-bg px-3 py-2 text-sm text-danger">
           {mutationError.message}
         </p>
       )}
 
       {state.tasks.length === 0 ? (
-        <p className="rounded-2xl border-2 border-dashed border-stone-300 p-6 text-center text-stone-500">
+        <p className="rounded-2xl border-2 border-dashed border-sep p-6 text-center text-label-2">
           No habits yet.
         </p>
       ) : (

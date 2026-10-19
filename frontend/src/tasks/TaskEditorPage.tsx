@@ -15,10 +15,10 @@ export function TaskEditorPage() {
   const taskId = id === undefined ? undefined : Number(id)
   const { data: task, isPending, error } = useTask(taskId)
 
-  if (taskId !== undefined && isPending) return <p className="p-8 text-center text-stone-500">Loading…</p>
+  if (taskId !== undefined && isPending) return <p className="p-8 text-center text-label-2">Loading…</p>
   if (taskId !== undefined && (error || !task)) {
     return (
-      <p className="p-8 text-center text-stone-600">
+      <p className="p-8 text-center text-label-2">
         Habit not found. <Link to="/tasks" className="underline">Back to habits</Link>
       </p>
     )
@@ -79,14 +79,14 @@ function Editor({ task }: { task?: TaskDefinition }) {
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-6">
       <div className="flex items-center gap-2">
-        <Link to="/tasks" className="text-sm text-stone-500 hover:text-stone-800">
+        <Link to="/tasks" className="text-sm text-label-2 hover:text-label">
           ← Habits
         </Link>
         <h2 className="ml-auto text-lg font-bold">{task ? 'Edit habit' : 'New habit'}</h2>
       </div>
 
       {archived && (
-        <p className="rounded-xl bg-stone-200 px-3 py-2 text-sm">This habit is archived and can't be edited.</p>
+        <p className="rounded-xl bg-fill-2 px-3 py-2 text-sm">This habit is archived and can't be edited.</p>
       )}
 
       <fieldset disabled={archived} className="space-y-5">
@@ -122,7 +122,7 @@ function Editor({ task }: { task?: TaskDefinition }) {
                 role="radio"
                 aria-checked={form.effectKey === effect.key}
                 onClick={() => update({ effectKey: effect.key })}
-                className={`flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-left text-sm ${form.effectKey === effect.key ? 'border-stone-800 bg-white font-semibold' : 'border-stone-300 bg-white/60'}`}
+                className={`flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-left text-sm ${form.effectKey === effect.key ? 'border-label bg-card font-semibold' : 'border-sep bg-card/60'}`}
               >
                 <span className="text-xl" aria-hidden>
                   {effectEmoji[effect.key]}
@@ -131,7 +131,7 @@ function Editor({ task }: { task?: TaskDefinition }) {
               </button>
             ))}
           </div>
-          {err('effectKey') && <p className="text-xs font-semibold text-red-700">{err('effectKey')}</p>}
+          {err('effectKey') && <p className="text-xs font-semibold text-danger">{err('effectKey')}</p>}
         </div>
 
         <div className="space-y-2">
@@ -144,17 +144,17 @@ function Editor({ task }: { task?: TaskDefinition }) {
                 role="radio"
                 aria-checked={form.type === type}
                 onClick={() => update({ type })}
-                className={`rounded-xl border-2 px-3 py-2 text-left ${form.type === type ? 'border-stone-800 bg-white' : 'border-stone-300 bg-white/60'}`}
+                className={`rounded-xl border-2 px-3 py-2 text-left ${form.type === type ? 'border-label bg-card' : 'border-sep bg-card/60'}`}
               >
                 <span className="block text-sm font-semibold">{TYPE_INFO[type].title}</span>
-                <span className="block text-xs text-stone-500">{TYPE_INFO[type].blurb}</span>
+                <span className="block text-xs text-label-2">{TYPE_INFO[type].blurb}</span>
               </button>
             ))}
           </div>
         </div>
 
-        <section className="space-y-4 rounded-2xl border-2 border-stone-300 bg-white/60 p-4" aria-label="Schedule">
-          {scheduleError && <p className="text-sm font-semibold text-red-700">{scheduleError}</p>}
+        <section className="space-y-4 rounded-2xl border-2 border-sep bg-card/60 p-4" aria-label="Schedule">
+          {scheduleError && <p className="text-sm font-semibold text-danger">{scheduleError}</p>}
           <ScheduleFields form={form} update={update} err={err} />
         </section>
       </fieldset>
@@ -169,12 +169,12 @@ function Editor({ task }: { task?: TaskDefinition }) {
         {task && task.active ? (
           <TimePreview taskId={task.id} dirty={dirty} />
         ) : (
-          <p className="text-sm text-stone-500">Save the habit to preview how you'll look at any time in the next two days.</p>
+          <p className="text-sm text-label-2">Save the habit to preview how you'll look at any time in the next two days.</p>
         )}
       </section>
 
       {save.error && !(save.error instanceof ApiError && save.error.problem.errors) && (
-        <p role="alert" className="rounded-xl bg-red-100 px-3 py-2 text-sm text-red-800">
+        <p role="alert" className="rounded-xl bg-danger-bg px-3 py-2 text-sm text-danger">
           {save.error.message}
         </p>
       )}
@@ -184,7 +184,7 @@ function Editor({ task }: { task?: TaskDefinition }) {
           <button
             type="submit"
             disabled={save.isPending}
-            className="flex-1 rounded-xl border-2 border-stone-800 bg-lime-300 py-3 font-bold shadow-[0_3px_0_#292524] active:translate-y-0.5 active:shadow-none disabled:opacity-60"
+            className="flex-1 rounded-xl border-2 border-label bg-lime-300 py-3 font-bold text-stone-950 shadow-[0_3px_0_#292524] active:translate-y-0.5 active:shadow-none disabled:opacity-60"
           >
             {save.isPending ? 'Saving…' : task ? 'Save changes' : 'Create habit'}
           </button>
@@ -193,7 +193,7 @@ function Editor({ task }: { task?: TaskDefinition }) {
               type="button"
               onClick={onArchive}
               disabled={archive.isPending}
-              className="rounded-xl border-2 border-stone-300 bg-white px-4 font-semibold text-stone-600 hover:border-red-400 hover:text-red-700"
+              className="rounded-xl border-2 border-sep bg-card px-4 font-semibold text-label-2 hover:border-danger hover:text-danger"
             >
               Archive
             </button>
@@ -232,13 +232,13 @@ function ScheduleFields({
                   type="button"
                   aria-pressed={check.days.includes(day)}
                   onClick={() => toggleDay(day)}
-                  className={`flex-1 rounded-lg border-2 py-1.5 text-xs font-bold ${check.days.includes(day) ? 'border-stone-800 bg-stone-800 text-white' : 'border-stone-300 bg-white text-stone-600'}`}
+                  className={`flex-1 rounded-lg border-2 py-1.5 text-xs font-bold ${check.days.includes(day) ? 'border-label bg-label text-app' : 'border-sep bg-card text-label-2'}`}
                 >
                   {day.slice(0, 2)}
                 </button>
               ))}
             </div>
-            <p className="mt-1 text-xs text-stone-500">{check.days.length === 0 ? 'None selected = every day' : `${check.days.length} day(s) a week`}</p>
+            <p className="mt-1 text-xs text-label-2">{check.days.length === 0 ? 'None selected = every day' : `${check.days.length} day(s) a week`}</p>
           </div>
           <Field id="dueSoon" label="Warn me before the deadline (minutes)" error={err('schedule.dueSoonMinutes')}>
             <NumberInput id="dueSoon" value={check.dueSoonMinutes} min={0} max={720} error={err('schedule.dueSoonMinutes')} onChange={(dueSoonMinutes) => update({ check: { ...check, dueSoonMinutes } })} />
@@ -279,7 +279,7 @@ function ScheduleFields({
                     onClick={() => setMeter({ slots: meter.slots.filter((_, j) => j !== i) })}
                     disabled={meter.slots.length <= 1}
                     aria-label={`Remove time ${i + 1}`}
-                    className="mb-0.5 rounded-xl border-2 border-stone-300 bg-white px-3 py-2 text-stone-500 disabled:opacity-40"
+                    className="mb-0.5 rounded-xl border-2 border-sep bg-card px-3 py-2 text-label-2 disabled:opacity-40"
                   >
                     ✕
                   </button>
@@ -289,7 +289,7 @@ function ScheduleFields({
                 type="button"
                 onClick={() => setMeter({ slots: [...meter.slots, meter.slots.at(-1) ?? '12:00'] })}
                 disabled={meter.slots.length >= 12}
-                className="text-sm font-semibold text-stone-700 underline disabled:opacity-40"
+                className="text-sm font-semibold text-label underline disabled:opacity-40"
               >
                 + Add a time
               </button>

@@ -1,6 +1,7 @@
 /**
- * iOS-style colors: `ring` is the system color (circles, icons), `text` a darker shade of the
- * same hue so titles and colored text stay readable on white (≥ 4.5:1).
+ * iOS-style colors: `ring` is the system color (circles, icons), `text` the same hue as a CSS
+ * variable from index.css: a darker shade in light mode, the iOS dark-mode shade in dark mode,
+ * so titles and colored text stay readable on the card (≥ 4.5:1).
  */
 export interface ListColor {
   ring: string
@@ -8,15 +9,15 @@ export interface ListColor {
 }
 
 export const LIST_COLORS = {
-  orange: { ring: '#ff9500', text: '#c93400' },
-  red: { ring: '#ff3b30', text: '#d70015' },
-  blue: { ring: '#007aff', text: '#0063cc' },
-  green: { ring: '#34c759', text: '#248a3d' },
-  purple: { ring: '#af52de', text: '#8944ab' },
-  gray: { ring: '#8e8e93', text: '#6c6c70' },
-  lightGray: { ring: '#c7c7cc', text: '#6c6c70' },
+  orange: { ring: '#ff9500', text: 'var(--list-orange)' },
+  red: { ring: '#ff3b30', text: 'var(--list-red)' },
+  blue: { ring: '#007aff', text: 'var(--list-blue)' },
+  green: { ring: '#34c759', text: 'var(--list-green)' },
+  purple: { ring: '#af52de', text: 'var(--list-purple)' },
+  gray: { ring: '#8e8e93', text: 'var(--list-gray)' },
+  lightGray: { ring: '#c7c7cc', text: 'var(--list-gray)' },
 } satisfies Record<string, ListColor>
 
 /** The text part of a row: hairline divider that starts at the text, none after the last row. */
-export const rowBodyClass = 'flex min-w-0 flex-1 items-center gap-2 border-b border-stone-200 py-2.5 pr-3 group-last:border-b-0'
+export const rowBodyClass = 'flex min-w-0 flex-1 items-center gap-2 border-b border-sep py-2.5 pr-3 group-last:border-b-0'
 

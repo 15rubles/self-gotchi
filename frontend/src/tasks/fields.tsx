@@ -21,9 +21,9 @@ export function Field({
         {label}
       </label>
       {children}
-      {hint && !error && <p className="mt-1 text-xs text-stone-500">{hint}</p>}
+      {hint && !error && <p className="mt-1 text-xs text-label-2">{hint}</p>}
       {error && (
-        <p id={`${id}-error`} className="mt-1 text-xs font-semibold text-red-700">
+        <p id={`${id}-error`} className="mt-1 text-xs font-semibold text-danger">
           {error}
         </p>
       )}
@@ -100,7 +100,7 @@ export function Segmented<T extends string>({
   onChange: (value: T) => void
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className="flex gap-1 rounded-xl bg-stone-200 p-1">
+    <div role="radiogroup" aria-label={label} className="flex gap-1 rounded-xl bg-fill-2 p-1">
       {options.map((option) => (
         <button
           key={option.value}
@@ -108,7 +108,7 @@ export function Segmented<T extends string>({
           role="radio"
           aria-checked={value === option.value}
           onClick={() => onChange(option.value)}
-          className={`flex-1 rounded-lg px-2 py-1.5 text-sm font-semibold ${value === option.value ? 'bg-white shadow' : 'text-stone-600'}`}
+          className={`flex-1 rounded-lg px-2 py-1.5 text-sm font-semibold ${value === option.value ? 'bg-card shadow' : 'text-label-2'}`}
         >
           {option.label}
         </button>

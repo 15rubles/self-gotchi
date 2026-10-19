@@ -1,10 +1,76 @@
 @import "tailwindcss";
 
+/* Dark mode follows the `dark` class on <html> (set by lib/theme.ts from the Settings choice). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Semantic colors (iOS-style roles) so every screen follows the theme: use `bg-app`, `bg-card`,
+ * `text-label` / `-2` / `-3`, `border-sep`, `bg-fill` / `-2`, `text-tint` instead of fixed shades.
+ */
 :root {
   color-scheme: light;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --app: #fffbeb;
+  --card: #ffffff;
+  --label: #1c1917;
+  --label-2: #78716c;
+  --label-3: #a8a29e;
+  --sep: #e7e5e4;
+  --fill: #f5f5f4;
+  --fill-2: #e7e5e4;
+  --tint: #007aff;
+  --inverse: #292524;
+  --ring-empty: #b4b4b9;
+  --danger: #b91c1c;
+  --danger-bg: #fee2e2;
+  /* list title colors (darker shades of the iOS system colors, readable on white) */
+  --list-orange: #c93400;
+  --list-red: #d70015;
+  --list-blue: #0063cc;
+  --list-green: #248a3d;
+  --list-purple: #8944ab;
+  --list-gray: #6c6c70;
+}
+
+:root.dark {
+  color-scheme: dark;
+  --app: #000000;
+  --card: #1c1c1e;
+  --label: #f5f5f7;
+  --label-2: #98989f;
+  --label-3: #636366;
+  --sep: #38383a;
+  --fill: #2c2c2e;
+  --fill-2: #3a3a3c;
+  --tint: #0a84ff;
+  --inverse: #3a3a3c;
+  --ring-empty: #636366;
+  --danger: #ff6961;
+  --danger-bg: #3a1212;
+  /* iOS dark-mode system colors, readable on the dark cards */
+  --list-orange: #ff9f0a;
+  --list-red: #ff6961;
+  --list-blue: #409cff;
+  --list-green: #30d158;
+  --list-purple: #da8fff;
+  --list-gray: #98989f;
+}
+
+@theme inline {
+  --color-app: var(--app);
+  --color-card: var(--card);
+  --color-label: var(--label);
+  --color-label-2: var(--label-2);
+  --color-label-3: var(--label-3);
+  --color-sep: var(--sep);
+  --color-fill: var(--fill);
+  --color-fill-2: var(--fill-2);
+  --color-tint: var(--tint);
+  --color-inverse: var(--inverse);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
 }
 
 body {
-  @apply bg-amber-50 text-stone-800 antialiased;
+  @apply bg-app text-label antialiased;
 }

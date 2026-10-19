@@ -104,7 +104,7 @@ export function GalleryPage() {
         <button
           type="button"
           onClick={() => setCelebrate((k) => k + 1)}
-          className="rounded-lg bg-lime-300 px-3 py-1 font-semibold"
+          className="rounded-lg bg-lime-300 px-3 py-1 font-semibold text-stone-950"
         >
           Play completion
         </button>
@@ -113,7 +113,7 @@ export function GalleryPage() {
         {shown.map(({ title, state }) => (
           <figure key={title}>
             <CharacterStage state={state} manifest={manifest} celebrateKey={celebrate} showAnchors={showAnchors} className="!rounded-xl !border-2 !shadow-none" />
-            <figcaption className="mt-1 text-center text-xs text-stone-600">{title}</figcaption>
+            <figcaption className="mt-1 text-center text-xs text-label-2">{title}</figcaption>
           </figure>
         ))}
       </div>

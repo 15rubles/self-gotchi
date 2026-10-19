@@ -19,9 +19,9 @@ export const RESULT_STYLE: Record<DayResult, Tone> = {
   LATE: { label: 'Done late', fill: '#fab219', ink: '#3b2a20', mark: 'late' },
   PARTIAL: { label: 'Partly done', fill: '#ec835a', ink: '#3b2a20', mark: '½' },
   MISSED: { label: 'Missed', fill: '#d03b3b', ink: '#ffffff', mark: '✗' },
-  PENDING: { label: 'Today, still open', fill: '#ffffff', ink: '#57534e', mark: '…', dashed: true },
-  OFF: { label: 'Not scheduled', fill: '#e7e5e4', ink: '#a8a29e', mark: '–' },
-  NONE: { label: 'Nothing due', fill: '#f5f5f4', ink: '#a8a29e', mark: '' },
+  PENDING: { label: 'Today, still open', fill: 'var(--card)', ink: 'var(--label-2)', mark: '…', dashed: true },
+  OFF: { label: 'Not scheduled', fill: 'var(--fill-2)', ink: 'var(--label-3)', mark: '–' },
+  NONE: { label: 'Nothing due', fill: 'var(--fill)', ink: 'var(--label-3)', mark: '' },
 }
 
 export const LEGEND_ORDER: DayResult[] = ['ON_TIME', 'LATE', 'PARTIAL', 'MISSED', 'PENDING', 'OFF']
