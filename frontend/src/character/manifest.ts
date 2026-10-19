@@ -28,6 +28,8 @@ export interface AssetManifest {
    * realistic overlays; `chibi` is a cut-out character on the illustrated room and effects.
    */
   frameStyle?: 'photo' | 'chibi'
+  /** Extension: a closed-eyes frame per pose, flashed now and then while the face is neutral. */
+  blinks?: Partial<Record<Pose, string>>
   /** Head center/size per pose when it differs between frames (falls back to headAnchor). */
   poseAnchors?: Partial<Record<Pose, HeadAnchor>>
 }

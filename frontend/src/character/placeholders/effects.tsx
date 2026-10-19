@@ -37,17 +37,18 @@ export function BellyGrowl({ x, y }: { x: number; y: number }) {
   return <image className="sg-growl-lines" href={art.growl} x={x + 150} y={y - 95} width={165} height={165} />
 }
 
-/** Sparkle burst for a completion, centered on the character. */
-export function Sparkles({ x, y }: { x: number; y: number }) {
-  const rays = 8
+/** Sparkle burst for a completion, centered on the character; `big` for a perfect day or a new reward. */
+export function Sparkles({ x, y, big = false }: { x: number; y: number; big?: boolean }) {
+  const rays = big ? 20 : 8
+  const reach = big ? 480 : 260
   return (
     <g transform={`translate(${x} ${y})`}>
       {Array.from({ length: rays }, (_, i) => {
         const angle = (i / rays) * Math.PI * 2
         const style = {
-          '--dx': `${Math.cos(angle) * 260}px`,
-          '--dy': `${Math.sin(angle) * 260}px`,
-          animationDelay: `${(i % 3) * 40}ms`,
+          '--dx': `${Math.cos(angle) * reach * (big && i % 2 ? 0.6 : 1)}px`,
+          '--dy': `${Math.sin(angle) * reach * (big && i % 2 ? 0.6 : 1)}px`,
+          animationDelay: `${(i % 3) * 40 + (big ? (i % 4) * 90 : 0)}ms`,
         } as CSSProperties
         return <image key={i} className="sg-sparkle" style={style} href={art.sparkle} x={-28} y={-28} width={56} height={56} />
       })}

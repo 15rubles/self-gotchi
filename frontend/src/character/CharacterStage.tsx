@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import type { CharacterState, Effect } from '../api/types'
+import type { CharacterState, Effect, RewardKey } from '../api/types'
 import { AssetImage } from './AssetImage'
 import { CANVAS, FACE_SIZE, anchors, pickFrame, type AssetManifest } from './manifest'
 import { CrossfadeImage } from './photo/CrossfadeImage'
@@ -10,6 +10,7 @@ import { defaultManifest } from './photo/photoAvatar'
 import { BellyGrowl, MouthSmell, Sparkles } from './placeholders/effects'
 import { Room } from './placeholders/room'
 import { ThoughtBubble } from './ThoughtBubble'
+import { useBlink } from './useBlink'
 import { useFadeOut } from './useFadeOut'
 import './animations.css'
 
@@ -25,17 +26,23 @@ const pct = (units: number) => `${(units / CANVAS) * 100}%`
  * room: mess, smell and icons are drawn over them. Chibi frames are cut-outs on the drawn room.
  *
  * @param celebrateKey bump to play the completion sparkle + hop
+ * @param bigCelebration a bigger burst with the next celebrateKey (perfect day, new reward)
+ * @param decorations   room rewards earned with perfect days (drawn on the illustrated room)
  */
 export function CharacterStage({
   state,
   manifest = defaultManifest,
   celebrateKey = 0,
+  bigCelebration = false,
+  decorations = [],
   className = '',
   showAnchors = false,
 }: {
   state: CharacterState
   manifest?: AssetManifest
   celebrateKey?: number
+  bigCelebration?: boolean
+  decorations?: RewardKey[]
   className?: string
   /** Debug: draw the head/mouth/belly/thought anchors, for tuning a manifest. */
   showAnchors?: boolean
@@ -45,6 +52,9 @@ export function CharacterStage({
   const frame = pickFrame(manifest, state.pose, state.face)
   /** Real-photo look: a single photo with overlays, or generated photo frames (chibi frames use the drawn room and effects). */
   const realistic = Boolean(photo || (frame && manifest.frameStyle !== 'chibi'))
+  // Blink only on the neutral face: every other expression has its own eyes.
+  const blinkSrc = frame && state.face === 'NEUTRAL' ? manifest.blinks?.[state.pose] : undefined
+  const blinking = useBlink(Boolean(blinkSrc))
   const has = (key: Effect['key']) => state.effects.some((e) => e.key === key)
   const effects = useFadeOut(
     state.effects.filter((e) => e.key === 'MOUTH_SMELL' || e.key === 'BELLY_GROWL'),
@@ -65,7 +75,7 @@ export function CharacterStage({
       aria-label={describe(state)}
     >
       {/* 1. room (layered art draws it behind; a photo is its own room, grime goes on top below) */}
-      {!realistic && <Room level={state.room} />}
+      {!realistic && <Room level={state.room} decorations={decorations} />}
 
       <div className={`absolute inset-0 ${realistic ? 'sg-breathe' : 'sg-bob'}`}>
         <div key={celebrateKey} className={`absolute inset-0 ${celebrateKey > 0 ? (realistic ? 'sg-hop-photo' : 'sg-hop') : ''}`}>
@@ -75,7 +85,19 @@ export function CharacterStage({
                 {/* 2. body pose (sweatpants = grey tint on the body layer) */}
                 <div className={`absolute inset-0 transition-[filter] duration-700 ${has('SWEATPANTS') && !frame ? 'sg-sweatpants' : ''}`}>
                   {frame ? (
-                    <CrossfadeImage src={frame} />
+                    <>
+                      <CrossfadeImage src={frame} />
+                      {/* always mounted so it's loaded; shown for a moment by useBlink */}
+                      {blinkSrc && (
+                        <img
+                          src={blinkSrc}
+                          alt=""
+                          draggable={false}
+                          className="absolute inset-0 h-full w-full object-cover select-none"
+                          style={{ opacity: blinking ? 1 : 0 }}
+                        />
+                      )}
+                    </>
                   ) : photo ? (
                     <PhotoPose photo={photo} pose={state.pose} />
                   ) : (
@@ -125,7 +147,7 @@ export function CharacterStage({
       {state.streakBonus && <div className="sg-happy-glow pointer-events-none absolute inset-0" aria-hidden />}
       {celebrateKey > 0 && (
         <svg key={`sparkle-${celebrateKey}`} viewBox="0 0 1024 1024" className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden>
-          <Sparkles x={a.head.x} y={a.head.y + 120} />
+          <Sparkles x={a.head.x} y={a.head.y + 120} big={bigCelebration} />
         </svg>
       )}
     </div>

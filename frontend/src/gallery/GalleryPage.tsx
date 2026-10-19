@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
-import type { CharacterState, Face, Pose } from '../api/types'
+import type { CharacterState, Face, Pose, RewardKey } from '../api/types'
 import { CharacterStage } from '../character/CharacterStage'
 import { placeholderManifest, type AssetManifest } from '../character/manifest'
 import { defaultManifest } from '../character/photo/photoAvatar'
@@ -18,7 +18,7 @@ const base: CharacterState = {
 const poses: Pose[] = ['NORMAL', 'TIRED', 'EXHAUSTED', 'LAZY']
 const faces: Face[] = ['NEUTRAL', 'HAPPY', 'WORRIED', 'VERY_WORRIED', 'TIRED', 'EXHAUSTED']
 
-const samples: { title: string; state: CharacterState }[] = [
+const samples: { title: string; state: CharacterState; decorations?: RewardKey[] }[] = [
   ...poses.map((pose) => ({ title: `Pose ${pose}`, state: { ...base, pose } })),
   ...faces.map((face) => ({ title: `Face ${face}`, state: { ...base, face } })),
   ...[1, 2, 3].map((room) => ({ title: `Room level ${room}`, state: { ...base, room } })),
@@ -57,6 +57,9 @@ const samples: { title: string; state: CharacterState }[] = [
     },
   },
   { title: 'Happy + streak', state: { ...base, face: 'HAPPY', streakBonus: true } },
+  { title: 'Room rewards: rug, lamp', state: base, decorations: ['RUG', 'LAMP'] },
+  { title: 'Room rewards: all four', state: base, decorations: ['RUG', 'LAMP', 'STRING_LIGHTS', 'BIG_PLANT'] },
+  { title: 'Room rewards on a messy day', state: { ...base, room: 2 }, decorations: ['RUG', 'LAMP', 'STRING_LIGHTS', 'BIG_PLANT'] },
   {
     title: 'Worst day',
     state: {
@@ -110,9 +113,9 @@ export function GalleryPage() {
         </button>
       </div>
       <div className={`grid gap-3 ${shown.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-        {shown.map(({ title, state }) => (
+        {shown.map(({ title, state, decorations }) => (
           <figure key={title}>
-            <CharacterStage state={state} manifest={manifest} celebrateKey={celebrate} showAnchors={showAnchors} className="!rounded-xl !border-2 !shadow-none" />
+            <CharacterStage state={state} decorations={decorations} manifest={manifest} celebrateKey={celebrate} showAnchors={showAnchors} className="!rounded-xl !border-2 !shadow-none" />
             <figcaption className="mt-1 text-center text-xs text-label-2">{title}</figcaption>
           </figure>
         ))}

@@ -37,7 +37,7 @@ app:
     display-name: ${APP_USER_DISPLAY_NAME:Aleksei}
     # IANA zone, e.g. Europe/Berlin. Empty = the JVM's default zone when the user is first created.
     timezone: ${APP_USER_TIMEZONE:}
-    # Hour (0-23) a new day starts. Empty = keep the stored value (04:00 for a new user).
+    # Hour (0-23) a new day starts, for a new user only (later: Settings). Empty = 04:00.
     day-reset-hour: ${APP_DAY_RESET_HOUR:}
   seed:
     enabled: ${APP_SEED:true}

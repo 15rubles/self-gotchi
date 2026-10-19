@@ -375,6 +375,36 @@ class ApiIntegrationTest {
         }
     }
 
+    // ---- rewards ------------------------------------------------------------------------------
+
+    @Nested
+    class Rewards {
+
+        @Test
+        void perfectDaysUnlockRoomRewards() throws Exception {
+            long food = createTask(PREP_FOOD); // by 22:00, created 2026-10-01 12:00
+            call(get("/api/v1/state"))
+                .andExpect(jsonPath("$.rewards.perfectDays").value(0))
+                .andExpect(jsonPath("$.rewards.unlocked", empty()))
+                .andExpect(jsonPath("$.rewards.next").value("RUG"))
+                .andExpect(jsonPath("$.rewards.nextAt").value(3));
+
+            clock.set(berlin("2026-10-04T12:00"));
+            for (String day : new String[] {"2026-10-01", "2026-10-02", "2026-10-03"}) {
+                send(post("/api/v1/tasks/" + food + "/complete"), """
+                    {"completedAt": "%s"}""".formatted(berlin(day + "T20:00")))
+                    .andExpect(status().isCreated());
+            }
+
+            // Oct 1-3 perfect; today (Oct 4) is still open, so it doesn't count yet.
+            call(get("/api/v1/state"))
+                .andExpect(jsonPath("$.rewards.perfectDays").value(3))
+                .andExpect(jsonPath("$.rewards.unlocked[0]").value("RUG"))
+                .andExpect(jsonPath("$.rewards.next").value("LAMP"))
+                .andExpect(jsonPath("$.rewards.nextAt").value(7));
+        }
+    }
+
     // ---- a day's log -------------------------------------------------------------------------
 
     @Nested

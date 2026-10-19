@@ -1,8 +1,10 @@
 import { useCallback, useState } from 'react'
 import { useCharacterState, useCompleteTask, useUndoCompletion } from '../api/hooks'
-import type { TaskState } from '../api/types'
+import type { RewardProgress, TaskState } from '../api/types'
 import { CharacterStage } from '../character/CharacterStage'
-import { formatDay, formatTime } from '../lib/format'
+import { formatDay, formatTime, rewardName } from '../lib/format'
+import { celebrationsFor } from './celebrations'
+import { CelebrationToast } from './CelebrationToast'
 import { TaskList } from './TaskList'
 import { UndoToast, type UndoTarget } from './UndoToast'
 
@@ -11,12 +13,19 @@ export function HomePage() {
   const complete = useCompleteTask()
   const undo = useUndoCompletion()
   const [celebrateKey, setCelebrateKey] = useState(0)
+  const [bigCelebration, setBigCelebration] = useState(false)
+  const [celebration, setCelebration] = useState<string[] | null>(null)
+  const closeCelebration = useCallback(() => setCelebration(null), [])
   const [undoTarget, setUndoTarget] = useState<UndoTarget | null>(null)
   const closeToast = useCallback(() => setUndoTarget(null), [])
 
   const onComplete = (task: TaskState) => {
+    const before = state
     complete.mutate(task.id, {
       onSuccess: (response) => {
+        const earned = before ? celebrationsFor(before, response.state, task.id) : { messages: [], big: false }
+        setBigCelebration(earned.big)
+        if (earned.messages.length > 0) setCelebration(earned.messages)
         setCelebrateKey((k) => k + 1)
         setUndoTarget({ completionId: response.completion.id, taskName: task.name })
       },
@@ -71,7 +80,13 @@ export function HomePage() {
         )}
       </div>
 
-      <CharacterStage state={state.character} celebrateKey={celebrateKey} />
+      <CharacterStage
+        state={state.character}
+        celebrateKey={celebrateKey}
+        bigCelebration={bigCelebration}
+        decorations={state.rewards.unlocked}
+      />
+      <RewardsLine rewards={state.rewards} />
 
       {mutationError && (
         <p role="alert" className="rounded-xl bg-danger-bg px-3 py-2 text-sm text-danger">
@@ -94,6 +109,22 @@ export function HomePage() {
       )}
 
       {undoTarget && <UndoToast target={undoTarget} onUndo={onUndo} onClose={closeToast} />}
+      {celebration && <CelebrationToast messages={celebration} onClose={closeCelebration} />}
     </div>
+  )
+}
+
+/** Perfect days so far and how far the next room reward is. */
+function RewardsLine({ rewards }: { rewards: RewardProgress }) {
+  const days = `${rewards.perfectDays} perfect ${rewards.perfectDays === 1 ? 'day' : 'days'}`
+  const next =
+    rewards.next && rewards.nextAt !== null
+      ? `${rewardName[rewards.next]} in ${rewards.nextAt - rewards.perfectDays} more`
+      : 'every room reward unlocked'
+  return (
+    <p className="-mt-2 px-1 text-sm text-label-2">
+      <span aria-hidden>🏆 </span>
+      {days} · {next}
+    </p>
   )
 }

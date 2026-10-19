@@ -288,3 +288,15 @@
     opacity: 1;
   }
 }
+
+/* Celebration banner slides down from the top. */
+.sg-toast-in {
+  animation: sg-toast-in 0.35s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+@keyframes sg-toast-in {
+  from { transform: translateY(-120%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sg-toast-in { animation: none; }
+}

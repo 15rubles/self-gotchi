@@ -18,10 +18,12 @@ import app.selfgotchi.state.EngineConfig;
 import app.selfgotchi.state.Evaluation;
 import app.selfgotchi.state.HistoryCalculator;
 import app.selfgotchi.state.LogicalDay;
+import app.selfgotchi.state.Rewards;
 import app.selfgotchi.state.StateEngine;
 import app.selfgotchi.state.model.CompletionLog;
 import app.selfgotchi.state.model.TaskDef;
 import app.selfgotchi.state.model.TaskEvaluation;
+import app.selfgotchi.state.model.TaskHistory;
 import app.selfgotchi.task.CompletionService;
 import app.selfgotchi.task.Task;
 import app.selfgotchi.task.TaskService;
@@ -65,7 +67,33 @@ public class StateService {
                 e.done(), e.target(), e.streak(), e.daysSinceDone(), e.latestCompletionId()));
         }
         return new StateResponse(when, at != null, evaluation.logicalDate(), user.getZoneId().getId(),
-            evaluation.character(), taskStates);
+            evaluation.character(), taskStates, rewards(user, when, evaluation.logicalDate()));
+    }
+
+    /**
+     * Perfect days over every habit's life (archived ones included, up to their archiving),
+     * bounded to the last {@value #MAX_HISTORY_DAYS} days, and the room rewards they unlock.
+     */
+    private Rewards.Progress rewards(User user, Instant when, LocalDate today) {
+        List<Task> all = tasks.list(user, true);
+        if (all.isEmpty()) {
+            return Rewards.progress(0);
+        }
+        LogicalDay logicalDay = new LogicalDay(user.getZoneId(), user.getDayResetHour());
+        LocalDate firstDay = all.stream().map(t -> logicalDay.dateOf(t.getCreatedAt())).min(LocalDate::compareTo).orElseThrow();
+        LocalDate from = firstDay.isAfter(today.minusDays(MAX_HISTORY_DAYS - 1)) ? firstDay : today.minusDays(MAX_HISTORY_DAYS - 1);
+        if (from.isAfter(today)) {
+            return Rewards.progress(0);
+        }
+
+        HistoryCalculator calculator = new HistoryCalculator(EngineConfig.withResetHour(user.getDayResetHour()));
+        Map<Long, List<CompletionLog>> logsByTask = completions.logs(user, logicalDay.start(from), when).stream()
+            .collect(Collectors.groupingBy(CompletionLog::taskId));
+        List<TaskHistory> histories = all.stream()
+            .map(task -> calculator.history(tasks.toDef(task), task.getArchivedAt(),
+                logsByTask.getOrDefault(task.getId(), List.of()), from, today, when, user.getZoneId()))
+            .toList();
+        return Rewards.progress(Rewards.perfectDays(histories));
     }
 
     /** @param from first logical day, default 12 weeks before {@code to}; @param to last day, default today */

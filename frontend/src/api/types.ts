@@ -57,6 +57,19 @@ export interface StateResponse {
   timezone: string
   character: CharacterState
   tasks: TaskState[]
+  rewards: RewardProgress
+}
+
+/** Room decorations earned with perfect days, in unlock order. */
+export type RewardKey = 'RUG' | 'LAMP' | 'STRING_LIGHTS' | 'BIG_PLANT'
+
+export interface RewardProgress {
+  /** Days where every due habit got done (today counts once it's complete). */
+  perfectDays: number
+  unlocked: RewardKey[]
+  /** The next reward and the perfect days it needs; null once everything is unlocked. */
+  next: RewardKey | null
+  nextAt: number | null
 }
 
 export interface CompletionResponse {

@@ -1,5 +1,9 @@
 // Shared art generated with `npm run art:generate` (OpenAI image API, chibi style). Committed:
 // none of it is personal. Rooms are full 1024x1024 frames; the rest are trimmed transparent sprites.
+import lamp from './deco-lamp.webp'
+import lights from './deco-lights.webp'
+import bigPlant from './deco-plant.webp'
+import rug from './deco-rug.webp'
 import bookIcon from './icon-book.webp'
 import genericIcon from './icon-generic.webp'
 import lunchboxIcon from './icon-lunchbox.webp'
@@ -21,4 +25,6 @@ export const art = {
   growl,
   sparkle,
   icons: { LUNCHBOX: lunchboxIcon, BOOK: bookIcon, GENERIC: genericIcon },
+  /** Room rewards, unlocked by perfect days. */
+  decorations: { RUG: rug, LAMP: lamp, STRING_LIGHTS: lights, BIG_PLANT: bigPlant },
 }

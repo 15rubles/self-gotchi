@@ -130,8 +130,32 @@ const ASSETS = [
     size: 256,
     prompt: `A cute cartoon yellow sticky note with a big bold red exclamation mark drawn on it, a reminder icon. ${SPRITE} ${STYLE.replace('No text, no letters, ', 'No words, ')}`,
   },
+  // Room rewards (unlocked by perfect days), drawn over the room near its edges.
+  {
+    name: 'deco-rug',
+    transparent: true,
+    size: 512,
+    prompt: `A cosy round woven rug in warm orange and cream stripes, seen from a slight front angle lying flat on a floor (a wide flat ellipse). ${SPRITE} ${STYLE}`,
+  },
+  {
+    name: 'deco-lamp',
+    transparent: true,
+    size: 384,
+    prompt: `A tall cute floor lamp with a warm glowing round shade and a slim wooden stand, standing upright, front view. ${SPRITE} ${STYLE}`,
+  },
+  {
+    name: 'deco-lights',
+    transparent: true,
+    size: 768,
+    prompt: `A long horizontal garland of warm glowing fairy string lights with colourful round bulbs, hanging in two gentle swags, very wide and short. ${SPRITE} ${STYLE}`,
+  },
+  {
+    name: 'deco-plant',
+    transparent: true,
+    size: 448,
+    prompt: `A big lush monstera plant in a large round terracotta pot, standing upright, front view, healthy and happy. ${SPRITE} ${STYLE}`,
+  },
 ]
-
 const fileOf = (name) => path.join(outDir, `${name}.webp`)
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 

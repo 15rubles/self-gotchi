@@ -10,6 +10,7 @@ interface GeneratedFile {
   style?: 'photo' | 'chibi'
   poseAnchors: Partial<Record<Pose, HeadAnchor>>
   frames: Partial<Record<FrameKey, string>>
+  blinks?: Partial<Record<Pose, string>>
 }
 
 const generatedJson = import.meta.glob('../../local-avatar/generated/avatar.json', { eager: true, import: 'default' })
@@ -40,6 +41,12 @@ function buildGenerated(file: GeneratedFile): AssetManifest | null {
     faces: Object.fromEntries(faceKeys.map((f) => [f, frames[`NORMAL/${f}`] ?? neutral('NORMAL')])) as Record<Face, string>,
     frames,
     frameStyle: file.style ?? 'photo',
+    blinks: Object.fromEntries(
+      Object.entries(file.blinks ?? {}).flatMap(([pose, name]) => {
+        const url = name && urlOf(name)
+        return url ? [[pose, url]] : []
+      }),
+    ),
     poseAnchors: file.poseAnchors,
   }
 }

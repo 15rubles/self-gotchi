@@ -1,4 +1,4 @@
-import type { EffectKey, TaskState } from '../api/types'
+import type { EffectKey, RewardKey, TaskState } from '../api/types'
 
 /** "21:30" in the user's time zone (not the browser's). */
 export function formatTime(iso: string, timeZone: string): string {
@@ -51,3 +51,14 @@ export function streakLabel(task: TaskState): string | null {
   if (task.streak < 2) return null
   return task.type === 'QUOTA' ? `${task.streak} wk` : `${task.streak} d`
 }
+
+/** "a cosy rug": reward names for celebration messages and the next-unlock hint. */
+export const rewardName: Record<RewardKey, string> = {
+  RUG: 'a cosy rug',
+  LAMP: 'a floor lamp',
+  STRING_LIGHTS: 'string lights',
+  BIG_PLANT: 'a big plant',
+}
+
+/** Streak lengths worth a celebration. */
+export const STREAK_MILESTONES = [3, 7, 14, 30, 50, 100, 200, 365]

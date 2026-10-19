@@ -6,6 +6,7 @@
 //   npm run avatar:generate -- --force                    # regenerate everything
 //   npm run avatar:generate -- --style photo              # photorealistic instead of chibi
 //   npm run avatar:generate -- --provider gemini          # GEMINI_API_KEY instead of OpenAI
+//   npm run avatar:generate -- --blink                    # also closed-eyes frames for the idle blink
 //   npm run avatar:generate -- --dry-run                  # no API calls: copies the photo, to test the app wiring
 //
 // Pipeline (DESIGN.md "Consistency strategy"): photo -> master (normal pose, neutral face) ->
@@ -33,6 +34,8 @@ const option = (name) => {
 
 const DRY_RUN = flag('dry-run')
 const FORCE = flag('force')
+/** Also make one closed-eyes frame per pose (from its neutral frame) for the idle blink. */
+const BLINK = flag('blink')
 const ONLY = option('only')?.toUpperCase()
 const STYLE_NAME = option('style') ?? 'chibi'
 const PROVIDER = option('provider') ?? (process.env.OPENAI_API_KEY ? 'openai' : 'gemini')
@@ -112,6 +115,7 @@ const PHOTO = {
       `skin, slack mouth slightly open, head heavy. ${KEEP_ALL} ${PHOTO_STYLE}`,
   },
   // Head center and size (scale 1 ~ a 440px-wide face box) on the 1024x1024 canvas, per pose.
+  blink: `Edit this photo: the person is mid-blink, both eyelids fully closed, relaxed face. ${KEEP_ALL} ${PHOTO_STYLE}`,
   anchors: {
     NORMAL: { x: 512, y: 330, scale: 0.7 },
     TIRED: { x: 512, y: 345, scale: 0.7 },
@@ -178,6 +182,7 @@ const CHIBI = {
       `a drop of drool, a few "z" letters and a tiny ghost-like soul drifting out of the mouth. ${KEEP_POSE} ${CHIBI_STYLE}`,
   },
   // Measured on the first generated set; `belly` overrides the point below the head for lying poses.
+  blink: `Make this character blink: both eyes fully closed as simple curved lines, calm face. ${KEEP_POSE} ${CHIBI_STYLE}`,
   anchors: {
     NORMAL: { x: 500, y: 305, scale: 1 },
     TIRED: { x: 510, y: 335, scale: 1 },
@@ -298,6 +303,7 @@ async function generate(prompt, references) {
 
 // WebP keeps the transparency at a tenth of the PNG size (the PWA precaches every frame).
 const frameFile = (pose, face) => path.join(outDir, `${pose}_${face}.webp`)
+const blinkFile = (pose) => path.join(outDir, `${pose}_BLINK.webp`)
 const toWebp = (bytes) => sharp(bytes).webp({ quality: 90, alphaQuality: 90, effort: 6 }).toBuffer()
 /** Frames made during this run, so --force regenerates each one once. */
 const madeThisRun = new Set()
@@ -372,6 +378,8 @@ function writeManifest() {
     // Head center and size per pose. Tune these in /gallery?anchors if overlays sit in the wrong place.
     poseAnchors: (sameStyle && previous.poseAnchors) || style.anchors,
     frames,
+    // Closed-eyes frame per pose, flashed for a moment while the face is neutral.
+    blinks: Object.fromEntries(POSES.filter((p) => fs.existsSync(blinkFile(p))).map((p) => [p, path.basename(blinkFile(p))])),
   }
   fs.writeFileSync(manifestFile, JSON.stringify(manifest, null, 2) + '\n')
   console.log(`\n${Object.keys(frames).length}/24 frames, manifest: ${manifestFile}`)
@@ -384,7 +392,8 @@ async function main() {
   fs.mkdirSync(outDir, { recursive: true })
   await convertLegacyFrames()
   const todo = POSES.flatMap((pose) => FACES.filter((face) => wanted(pose, face)).map((face) => [pose, face]))
-  if (todo.length > 0) {
+  const blinks = BLINK ? POSES.filter((pose) => FORCE || !fs.existsSync(blinkFile(pose))) : []
+  if (todo.length > 0 || blinks.length > 0) {
     if (!DRY_RUN && !provider.key) {
       console.error(`Set ${provider.keyName} or use --dry-run.`)
       process.exitCode = 1
@@ -397,6 +406,12 @@ async function main() {
     )
   }
   for (const [pose, face] of todo) await ensure(pose, face, photo)
+  for (const pose of blinks) {
+    const base = await ensure(pose, 'NEUTRAL', photo)
+    console.log(`- ${pose}/BLINK`)
+    const bytes = DRY_RUN ? fs.readFileSync(base) : await generate(style.blink, [base])
+    fs.writeFileSync(blinkFile(pose), await toWebp(bytes))
+  }
   writeManifest()
 }
 
