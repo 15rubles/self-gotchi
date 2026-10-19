@@ -126,3 +126,8 @@ Choices made where `DESIGN.md` is ambiguous or silent. Newest at the bottom of e
 - `done` = ON_TIME + LATE; `due` = those + PARTIAL + MISSED + PENDING. Quota and freshness habits only report days they were done, so they count on both sides on those days and not at all otherwise (no "missed" for them on a single day).
 - A dropdown switches to **one habit** (`/history?task=<id>`, linkable): the same calendar with that habit's result per day (each with a text mark: ✓, late, ½, ✗, …, –, so color is never the only cue) and its current/best streaks.
 - Replaced: the 4/12/26-week per-habit heatmaps and the "Show as table" toggle. The calendar cells carry text and the day list is a readable list, so the separate table isn't needed. Frontend only: `/history` is fetched per month.
+
+## Home list in the iOS Reminders style (user request)
+- Each status group is a Reminders-style list: a colored title with a count (Due soon orange, Needs attention red, Later blue, Done / Not today grey) over a white rounded card. Rows: a 22 px ring on the left (44 px tap target) that fills with the group color when done or while saving, the name at 17 px, a grey 15 px details line (in the group color when due soon or missed), hairline dividers starting at the text.
+- Severity is shown as Reminders' priority marks (`!`, `!!`, `!!!`) before the name, replacing the colored left border. The habit emoji and streak sit on the right. "Not today" rows get a dashed ring.
+- Ring colors are iOS system colors; titles and colored text use darker shades of the same hues so they stay ≥ 4.5:1 on white.
