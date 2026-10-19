@@ -1,4 +1,9 @@
 spring:
+  servlet:
+    multipart:
+      # calendar .ics uploads (the import itself rejects files over 5 MB with a clear message)
+      max-file-size: 6MB
+      max-request-size: 6MB
   application:
     name: self-gotchi
   datasource:

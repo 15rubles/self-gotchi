@@ -18,7 +18,7 @@ final class CheckEvaluator {
 
     static TaskEvaluation evaluate(TaskContext c, CheckSchedule s) {
         int streak = streak(c, s);
-        if (!s.appliesOn(c.today.getDayOfWeek())) {
+        if (!s.appliesOn(c.today)) {
             return c.off(streak);
         }
         Instant deadline = c.day.at(c.today, s.deadline());
@@ -43,14 +43,14 @@ final class CheckEvaluator {
     /** Whether the task was due on that date at all (scheduled, and existed before the deadline). */
     static boolean isMissable(TaskContext c, CheckSchedule s, LocalDate date) {
         return date != null
-            && s.appliesOn(date.getDayOfWeek())
+            && s.appliesOn(date)
             && c.existedBefore(c.day.at(date, s.deadline()));
     }
 
     private static LocalDate previousScheduled(CheckSchedule s, LocalDate date) {
         for (int i = 1; i <= 7; i++) {
             LocalDate candidate = date.minusDays(i);
-            if (s.appliesOn(candidate.getDayOfWeek())) {
+            if (s.appliesOn(candidate)) {
                 return candidate;
             }
         }
@@ -62,7 +62,7 @@ final class CheckEvaluator {
         LocalDate date = c.on(c.today).isEmpty() ? c.today.minusDays(1) : c.today;
         int streak = 0;
         for (int i = 0; i < TaskContext.MAX_LOOKBACK && !date.isBefore(c.createdDate); i++, date = date.minusDays(1)) {
-            if (!s.appliesOn(date.getDayOfWeek())) {
+            if (!s.appliesOn(date)) {
                 continue;
             }
             if (c.on(date).isEmpty()) {

@@ -375,6 +375,90 @@ class ApiIntegrationTest {
         }
     }
 
+    // ---- calendar import / one-time habits ----------------------------------------------------
+
+    @Nested
+    class CalendarImport {
+
+        static final String ICS = """
+            BEGIN:VCALENDAR\r
+            VERSION:2.0\r
+            PRODID:-//test//EN\r
+            BEGIN:VEVENT\r
+            UID:gym-series\r
+            SUMMARY:Gym\r
+            DTSTAMP:20260901T000000Z\r
+            DTSTART;TZID=Europe/Berlin:20260907T180000\r
+            DTEND;TZID=Europe/Berlin:20260907T190000\r
+            RRULE:FREQ=WEEKLY;BYDAY=MO,TH\r
+            END:VEVENT\r
+            BEGIN:VEVENT\r
+            UID:dentist-1\r
+            SUMMARY:Dentist\r
+            DTSTAMP:20260901T000000Z\r
+            DTSTART;TZID=Europe/Berlin:20261007T140000\r
+            DTEND;TZID=Europe/Berlin:20261007T150000\r
+            END:VEVENT\r
+            END:VCALENDAR\r
+            """;
+
+        ResultActions upload(String ics) throws Exception {
+            return call(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/v1/import/ics")
+                .file(new org.springframework.mock.web.MockMultipartFile("file", "cal.ics", "text/calendar", ics.getBytes())));
+        }
+
+        @Test
+        void previewThenImportThenTheEventIsMarkedImported() throws Exception {
+            upload(ICS)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.events", hasSize(2)))
+                .andExpect(jsonPath("$.events[0].name").value("Gym"))
+                .andExpect(jsonPath("$.events[0].recurring").value(true))
+                .andExpect(jsonPath("$.events[0].days[0]").value("MONDAY"))
+                .andExpect(jsonPath("$.events[0].deadline").value("19:00:00"))
+                .andExpect(jsonPath("$.events[1].name").value("Dentist"))
+                .andExpect(jsonPath("$.events[1].recurring").value(false))
+                .andExpect(jsonPath("$.events[1].date").value("2026-10-07"))
+                .andExpect(jsonPath("$.events[1].alreadyImported").value(false));
+
+            String dentist = """
+                {"name": "Dentist", "category": "MENTAL", "effectKey": "GENERIC", "importUid": "dentist-1",
+                 "schedule": {"type": "CHECK", "recurrence": "ONCE", "date": "2026-10-07", "deadline": "15:00"}}""";
+            send(post("/api/v1/tasks"), dentist).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.schedule.date").value("2026-10-07"));
+
+            upload(ICS).andExpect(jsonPath("$.events[1].alreadyImported").value(true));
+            send(post("/api/v1/tasks"), dentist).andExpect(status().isConflict());
+        }
+
+        @Test
+        void aOneTimeHabitIsOnlyDueOnItsDay() throws Exception {
+            createTask("""
+                {"name": "Dentist", "category": "MENTAL", "effectKey": "GENERIC",
+                 "schedule": {"type": "CHECK", "recurrence": "ONCE", "date": "2026-10-07", "deadline": "15:00"}}""");
+
+            call(get("/api/v1/state")).andExpect(jsonPath("$.tasks[0].status").value("OFF"));
+            clock.set(berlin("2026-10-07T14:30"));
+            call(get("/api/v1/state")).andExpect(jsonPath("$.tasks[0].status").value("DUE_SOON"));
+        }
+
+        @Test
+        void notACalendarFile() throws Exception {
+            upload("hello").andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].field").value("ics"));
+        }
+
+        @Test
+        void linksMustBeHttpsAndNotLocal() throws Exception {
+            for (String url : new String[] {"http://example.com/cal.ics", "https://localhost/cal.ics",
+                "https://127.0.0.1/cal.ics", "webcal://192.168.1.10/cal.ics", "file:///etc/passwd"}) {
+                send(post("/api/v1/import/ics-url"), "{\"url\": \"" + url + "\"}")
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errors[0].field").value("url"));
+            }
+        }
+    }
+
     // ---- rewards ------------------------------------------------------------------------------
 
     @Nested

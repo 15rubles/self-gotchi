@@ -15,10 +15,12 @@ import app.selfgotchi.state.model.CharacterState;
 import app.selfgotchi.state.model.CharacterState.Effect;
 import app.selfgotchi.state.model.CharacterState.EffectType;
 import app.selfgotchi.state.model.CharacterState.IconType;
+import app.selfgotchi.state.model.DayResult;
 import app.selfgotchi.state.model.EffectKey;
 import app.selfgotchi.state.model.Face;
 import app.selfgotchi.state.model.Pose;
 import app.selfgotchi.state.model.TaskEvaluation;
+import app.selfgotchi.state.model.TaskHistory;
 import app.selfgotchi.state.model.TaskStatus;
 
 /**
@@ -238,6 +240,48 @@ class StateEngineTest {
     }
 
     // =========================================================================================
+    @Nested
+    class OneTimeCheckmark {
+
+        /** Dentist on Wed 2026-10-07 by 14:00, created long before. */
+        private Scenario dentist() {
+            Scenario s = berlin();
+            s.once("Dentist", "2026-10-07", "14:00");
+            return s;
+        }
+
+        @ParameterizedTest(name = "{0} -> {1} severity {2}")
+        @CsvSource({
+            "2026-10-06T12:00, OFF,      0",  // the day before
+            "2026-10-07T10:00, UPCOMING, 0",
+            "2026-10-07T13:30, DUE_SOON, 1",
+            "2026-10-07T14:30, MISSED,   2",  // never 3: there is no previous occurrence
+            "2026-10-08T12:00, OFF,      0",  // the day after: nothing due any more
+        })
+        void onlyItsDateCounts(String at, TaskStatus status, int severity) {
+            TaskEvaluation eval = dentist().task(1, at);
+            assertThat(eval.status()).isEqualTo(status);
+            assertThat(eval.severity()).isEqualTo(severity);
+        }
+
+        @Test
+        void doneOnItsDate_evenLate() {
+            Scenario s = dentist();
+            s.done(1, "2026-10-07T15:00");
+            assertThat(s.task(1, "2026-10-07T16:00").status()).isEqualTo(TaskStatus.DONE);
+        }
+
+        @Test
+        void historyOnlyJudgesItsDate() {
+            Scenario s = dentist();
+            s.done(1, "2026-10-07T13:00");
+
+            TaskHistory h = s.history(1, "2026-10-06", "2026-10-08", "2026-10-08T12:00");
+            assertThat(h.days()).extracting(TaskHistory.Day::result)
+                .containsExactly(DayResult.NONE, DayResult.ON_TIME, DayResult.NONE);
+        }
+    }
+
     @Nested
     class WeeklyQuota {
 

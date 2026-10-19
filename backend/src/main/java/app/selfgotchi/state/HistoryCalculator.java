@@ -13,6 +13,7 @@ import app.selfgotchi.state.model.DayResult;
 import app.selfgotchi.state.model.FreshnessSchedule;
 import app.selfgotchi.state.model.MeterSchedule;
 import app.selfgotchi.state.model.QuotaSchedule;
+import app.selfgotchi.state.model.Recurrence;
 import app.selfgotchi.state.model.TaskDef;
 import app.selfgotchi.state.model.TaskHistory;
 
@@ -71,7 +72,8 @@ public final class HistoryCalculator {
             return done.getFirst().completedAt().isAfter(deadline) ? DayResult.LATE : DayResult.ON_TIME;
         }
         if (!CheckEvaluator.isMissable(c, s, date)) {
-            return DayResult.OFF;
+            // A one-time checkmark has nothing to do with other days, not "not scheduled".
+            return s.recurrence() == Recurrence.ONCE ? DayResult.NONE : DayResult.OFF;
         }
         return c.now.isBefore(deadline) ? DayResult.PENDING : DayResult.MISSED;
     }
@@ -109,7 +111,7 @@ public final class HistoryCalculator {
         for (LocalDate date = c.createdDate; !date.isAfter(lastDay); date = date.plusDays(1)) {
             boolean done;
             if (c.task.schedule() instanceof CheckSchedule s) {
-                if (!s.appliesOn(date.getDayOfWeek())) {
+                if (!s.appliesOn(date)) {
                     continue;
                 }
                 done = !c.on(date).isEmpty();

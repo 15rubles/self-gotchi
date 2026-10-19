@@ -1,6 +1,7 @@
 package app.selfgotchi.task;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -45,7 +46,7 @@ public class ScheduleCodec {
         "MON", DayOfWeek.MONDAY, "TUE", DayOfWeek.TUESDAY, "WED", DayOfWeek.WEDNESDAY,
         "THU", DayOfWeek.THURSDAY, "FRI", DayOfWeek.FRIDAY, "SAT", DayOfWeek.SATURDAY, "SUN", DayOfWeek.SUNDAY);
     private static final Map<TaskType, Set<String>> ALLOWED_FIELDS = Map.of(
-        TaskType.CHECK, Set.of("type", "recurrence", "days", "deadline", "dueSoonMinutes"),
+        TaskType.CHECK, Set.of("type", "recurrence", "days", "deadline", "dueSoonMinutes", "date"),
         TaskType.METER, Set.of("type", "slots", "count", "minGapMinutes", "firstBy", "lastBy"),
         TaskType.QUOTA, Set.of("type", "timesPerWeek", "weekStarts"),
         TaskType.FRESHNESS, Set.of("type", "thresholdsDays"));
@@ -81,11 +82,7 @@ public class ScheduleCodec {
         Schedule schedule = null;
         try {
             schedule = switch (type) {
-                case CHECK -> new CheckSchedule(
-                    r.enumValue("recurrence", Recurrence.class, Recurrence.DAILY),
-                    r.days("days"),
-                    r.requiredTime("deadline"),
-                    r.integer("dueSoonMinutes", CheckSchedule.DEFAULT_DUE_SOON_MINUTES));
+                case CHECK -> check(r);
                 case METER -> new MeterSchedule(
                     r.slots("slots"),
                     r.optionalInteger("count"),
@@ -106,6 +103,29 @@ public class ScheduleCodec {
             throw new ValidationException(r.errors);
         }
         return schedule;
+    }
+
+    /** A checkmark, with field errors for the one-time / repeating rules instead of one generic message. */
+    private static CheckSchedule check(Reader r) {
+        Recurrence recurrence = r.enumValue("recurrence", Recurrence.class, Recurrence.DAILY);
+        Set<DayOfWeek> days = r.days("days");
+        LocalDate date = r.date("date");
+        if (recurrence == Recurrence.ONCE) {
+            if (date == null && !r.hasError("date")) {
+                r.errors.add(new Violation(r.path("date"), "is required for a one-time habit"));
+            }
+            if (!days.isEmpty()) {
+                r.errors.add(new Violation(r.path("days"), "must be empty for a one-time habit"));
+            }
+        } else if (date != null) {
+            r.errors.add(new Violation(r.path("date"), "is only for a one-time habit (recurrence ONCE)"));
+        }
+        LocalTime deadline = r.requiredTime("deadline");
+        int dueSoon = r.integer("dueSoonMinutes", CheckSchedule.DEFAULT_DUE_SOON_MINUTES);
+        if (!r.errors.isEmpty()) {
+            return null;
+        }
+        return new CheckSchedule(recurrence, days, deadline, dueSoon, date);
     }
 
     private static String describe(RuntimeException e) {
@@ -185,6 +205,27 @@ public class ScheduleCodec {
                 result.add(item.intValue());
             }
             return result;
+        }
+
+        /** A calendar date like 2026-10-07, or null when absent (an error when malformed). */
+        LocalDate date(String field) {
+            JsonNode value = node.get(field);
+            if (absent(value)) {
+                return null;
+            }
+            try {
+                if (value.isTextual()) {
+                    return LocalDate.parse(value.asText());
+                }
+            } catch (DateTimeParseException e) {
+                // fall through
+            }
+            errors.add(new Violation(path(field), "must be a date like 2026-10-07"));
+            return null;
+        }
+
+        boolean hasError(String field) {
+            return errors.stream().anyMatch(v -> v.field().equals(path(field)));
         }
 
         LocalTime time(String field) {
@@ -305,6 +346,9 @@ public class ScheduleCodec {
                 check.days().stream().sorted().forEach(day -> days.add(dayCode(day)));
                 node.put("deadline", formatTime(check.deadline()));
                 node.put("dueSoonMinutes", check.dueSoonMinutes());
+                if (check.date() != null) {
+                    node.put("date", check.date().toString());
+                }
             }
             case MeterSchedule meter -> {
                 if (meter.hasExplicitSlots()) {

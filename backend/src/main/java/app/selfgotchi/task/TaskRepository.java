@@ -15,4 +15,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     Optional<Task> findByIdAndUserId(Long id, Long userId);
 
     long countByUserId(Long userId);
+
+    boolean existsByUserIdAndImportUid(Long userId, String importUid);
+
+    List<Task> findByUserIdAndImportUidIsNotNull(Long userId);
 }

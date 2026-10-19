@@ -87,6 +87,12 @@ final class Scenario {
         return check("Prepare food", EffectKey.LUNCHBOX, "22:00");
     }
 
+    /** A one-time checkmark on {@code date} ("2026-10-07") by {@code deadline}. */
+    long once(String name, String date, String deadline) {
+        return task(name, Category.MENTAL, EffectKey.GENERIC,
+            new CheckSchedule(Recurrence.ONCE, Set.of(), LocalTime.parse(deadline), 60, java.time.LocalDate.parse(date)));
+    }
+
     long check(String name, EffectKey key, String deadline, DayOfWeek... days) {
         return task(name, Category.MENTAL, key,
             new CheckSchedule(Recurrence.DAILY, Set.of(days), LocalTime.parse(deadline), 60));

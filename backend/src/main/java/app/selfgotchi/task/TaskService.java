@@ -49,6 +49,12 @@ public class TaskService {
         Instant now = clock.instant();
         int sortOrder = request.sortOrder() != null ? request.sortOrder() : (int) tasks.countByUserId(user.getId());
         Task task = new Task(user.getId(), now);
+        if (request.importUid() != null && !request.importUid().isBlank()) {
+            if (tasks.existsByUserIdAndImportUid(user.getId(), request.importUid())) {
+                throw new ConflictException("this calendar event was already imported");
+            }
+            task.setImportUid(request.importUid());
+        }
         task.update(request.name().strip(), request.category(), schedule.type(), request.effectKey(),
             codec.toJson(schedule), sortOrder, now);
         return tasks.save(task);
@@ -72,6 +78,14 @@ public class TaskService {
         if (task.isActive()) {
             task.archive(clock.instant());
         }
+    }
+
+    /** UIDs of calendar events the user already imported (for the import review). */
+    @Transactional(readOnly = true)
+    public java.util.Set<String> importedUids(User user) {
+        return tasks.findByUserIdAndImportUidIsNotNull(user.getId()).stream()
+            .map(Task::getImportUid)
+            .collect(java.util.stream.Collectors.toSet());
     }
 
     public TaskDef toDef(Task task) {

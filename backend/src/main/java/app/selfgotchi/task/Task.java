@@ -67,6 +67,10 @@ public class Task {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    /** The calendar event (iCalendar UID) this habit was imported from, or null. */
+    @Column(name = "import_uid", updatable = false)
+    private String importUid;
+
     protected Task() {
     }
 
@@ -85,6 +89,14 @@ public class Task {
         this.schedule = scheduleJson;
         this.sortOrder = sortOrder;
         this.updatedAt = now;
+    }
+
+    public void setImportUid(String importUid) {
+        this.importUid = importUid;
+    }
+
+    public String getImportUid() {
+        return importUid;
     }
 
     public void archive(Instant now) {

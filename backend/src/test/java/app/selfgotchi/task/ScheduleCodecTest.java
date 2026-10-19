@@ -41,6 +41,40 @@ class ScheduleCodecTest {
     }
 
     @Test
+    void decodesAOneTimeCheck() {
+        Schedule s = codec.fromJson("""
+            { "type": "CHECK", "recurrence": "ONCE", "date": "2026-10-07", "deadline": "14:00" }""");
+
+        assertThat(s).isEqualTo(new CheckSchedule(Recurrence.ONCE, Set.of(), LocalTime.of(14, 0), 60,
+            java.time.LocalDate.of(2026, 10, 7)));
+        assertThat(codec.toJson(s)).contains("\"date\":\"2026-10-07\"").contains("\"recurrence\":\"ONCE\"");
+    }
+
+    @Test
+    void aOneTimeCheckNeedsADateAndNoWeekdays() {
+        assertThatThrownBy(() -> codec.fromJson("""
+            { "type": "CHECK", "recurrence": "ONCE", "deadline": "14:00" }"""))
+            .isInstanceOfSatisfying(ValidationException.class,
+                e -> assertThat(e.violations()).extracting(Violation::field).containsExactly("schedule.date"));
+        assertThatThrownBy(() -> codec.fromJson("""
+            { "type": "CHECK", "recurrence": "ONCE", "date": "2026-10-07", "days": ["MON"], "deadline": "14:00" }"""))
+            .isInstanceOfSatisfying(ValidationException.class,
+                e -> assertThat(e.violations()).extracting(Violation::field).containsExactly("schedule.days"));
+        assertThatThrownBy(() -> codec.fromJson("""
+            { "type": "CHECK", "recurrence": "ONCE", "date": "7.10.2026", "deadline": "14:00" }"""))
+            .isInstanceOfSatisfying(ValidationException.class,
+                e -> assertThat(e.violations()).extracting(Violation::field).containsExactly("schedule.date"));
+    }
+
+    @Test
+    void aDailyCheckHasNoDate() {
+        assertThatThrownBy(() -> codec.fromJson("""
+            { "type": "CHECK", "date": "2026-10-07", "deadline": "14:00" }"""))
+            .isInstanceOfSatisfying(ValidationException.class,
+                e -> assertThat(e.violations()).extracting(Violation::field).containsExactly("schedule.date"));
+    }
+
+    @Test
     void decodesMeterWithExplicitSlots() {
         Schedule s = codec.fromJson("""
             { "type": "METER", "slots": [{"by": "10:00"}, {"by": "23:30"}] }""");
