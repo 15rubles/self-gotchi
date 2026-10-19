@@ -1,6 +1,7 @@
 import type { TaskState } from '../api/types'
 import { describeTask, effectEmoji, streakLabel } from '../lib/format'
 import { rowBodyClass, type ListColor } from '../ui/listStyles'
+import { UndoIcon } from '../ui/Icons'
 
 export type RowBusy = 'complete' | 'undo'
 
@@ -87,9 +88,9 @@ export function TaskRow({
             disabled={busy !== null}
             aria-label={`Undo the last ${task.name} log`}
             title="Undo the last log"
-            className="grid size-9 shrink-0 place-items-center rounded-full text-lg text-tint hover:bg-fill disabled:text-label-3"
+            className="grid size-9 shrink-0 place-items-center rounded-full text-tint hover:bg-fill disabled:text-label-3"
           >
-            ↺
+            <UndoIcon size={18} strokeWidth={2.25} />
           </button>
         )}
         {streak && (

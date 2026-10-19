@@ -7,6 +7,7 @@ import { effectEmoji } from "../lib/format";
 import { ListSection, PageTitle, Switch } from "../ui/ListSection";
 import { LIST_COLORS, rowBodyClass, type ListColor } from "../ui/listStyles";
 import { TYPE_INFO, describeSchedule } from "./taskForm";
+import { ChevronRightIcon } from "../ui/Icons";
 
 /** Habit definitions in the same Reminders style as the home screen: physical, mental, archived. */
 export function TasksPage() {
@@ -114,9 +115,7 @@ function HabitRow({ task, color }: { task: TaskDefinition; color: ListColor }) {
               {TYPE_INFO[task.type].title} · {describeSchedule(task.schedule)}
             </span>
           </span>
-          <span className="shrink-0 text-xl text-label-3" aria-hidden>
-            ›
-          </span>
+          <ChevronRightIcon size={16} className="text-label-3" />
         </span>
       </Link>
     </li>

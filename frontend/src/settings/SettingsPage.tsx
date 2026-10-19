@@ -5,6 +5,7 @@ import type { Me } from '../api/types'
 import { useTheme, type Theme } from '../lib/theme'
 import { Group, PageTitle } from '../ui/ListSection'
 import { rowBodyClass } from '../ui/listStyles'
+import { CheckIcon } from '../ui/Icons'
 
 const THEMES: { value: Theme; label: string }[] = [
   { value: 'system', label: 'Automatic' },
@@ -39,9 +40,7 @@ export function SettingsPage() {
               <span className={rowBodyClass}>
                 <span className="flex-1 text-[17px]">{option.label}</span>
                 {theme === option.value && (
-                  <span className="text-lg font-semibold text-tint" aria-hidden>
-                    ✓
-                  </span>
+                  <CheckIcon size={20} strokeWidth={2.75} className="text-tint" />
                 )}
               </span>
             </button>

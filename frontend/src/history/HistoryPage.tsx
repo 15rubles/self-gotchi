@@ -9,6 +9,7 @@ import { LIST_COLORS, rowBodyClass } from '../ui/listStyles'
 import { DayEditor } from './DayEditor'
 import { MonthCalendar, type CalendarCell } from './MonthCalendar'
 import { LEGEND_ORDER, RESULT_STYLE, SUMMARY_LEGEND, SUMMARY_STYLE, summarize, type DaySummary } from './results'
+import { ChevronLeftIcon, ChevronRightIcon } from '../ui/Icons'
 
 /**
  * A month calendar of all habits together (done / due per day), or of one habit picked from
@@ -95,18 +96,18 @@ export function HistoryPage() {
 
       <Card className="p-3">
         <div className="mb-3 flex items-center justify-between">
-          <button type="button" onClick={() => go(-1)} disabled={!month} className="rounded-lg px-3 py-1 text-2xl leading-none text-tint hover:bg-fill" aria-label="Previous month">
-            ‹
+          <button type="button" onClick={() => go(-1)} disabled={!month} className="grid size-9 place-items-center rounded-lg text-tint hover:bg-fill" aria-label="Previous month">
+            <ChevronLeftIcon size={22} />
           </button>
           <h3 className="text-[17px] font-semibold">{month ? formatDate(month, { month: 'long', year: 'numeric' }) : ''}</h3>
           <button
             type="button"
             onClick={() => go(1)}
             disabled={!month || !today || month >= monthStart(today)}
-            className="rounded-lg px-3 py-1 text-2xl leading-none text-tint hover:bg-fill disabled:text-label-3 disabled:hover:bg-transparent"
+            className="grid size-9 place-items-center rounded-lg text-tint hover:bg-fill disabled:text-label-3 disabled:hover:bg-transparent"
             aria-label="Next month"
           >
-            ›
+            <ChevronRightIcon size={22} />
           </button>
         </div>
 
@@ -245,9 +246,7 @@ function ResultRow({
               {s.mark}
             </span>
           )}
-          <span className="shrink-0 text-xl text-label-3" aria-hidden>
-            ›
-          </span>
+          <ChevronRightIcon size={16} className="text-label-3" />
         </span>
       </button>
     </li>

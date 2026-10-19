@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { inlineControl, rowBodyClass } from './listStyles'
+import { MinusIcon, PlusIcon } from './Icons'
 
 /** iOS Settings-style rounded-square icon at the start of a row. */
 export function RowIcon({ emoji, color }: { emoji: string; color: string }) {
@@ -84,7 +85,7 @@ export function Stepper({
   onChange: (value: number) => void
 }) {
   const current = Number.isNaN(value) ? min : value
-  const button = 'grid h-8 w-10 place-items-center text-xl leading-none text-label disabled:text-label-3'
+  const button = 'grid h-8 w-10 place-items-center text-label disabled:text-label-3'
   return (
     <span className="flex items-center gap-2">
       <input
@@ -102,10 +103,10 @@ export function Stepper({
       {unit && <span className="text-[17px] text-label-2">{unit}</span>}
       <span className="flex divide-x divide-sep overflow-hidden rounded-lg bg-fill">
         <button type="button" className={button} onClick={() => onChange(Math.max(min, current - step))} disabled={current <= min} aria-label="Decrease">
-          −
+          <MinusIcon size={16} />
         </button>
         <button type="button" className={button} onClick={() => onChange(Math.min(max, current + step))} disabled={current >= max} aria-label="Increase">
-          +
+          <PlusIcon size={16} />
         </button>
       </span>
     </span>

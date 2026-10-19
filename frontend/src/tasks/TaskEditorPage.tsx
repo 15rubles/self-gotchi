@@ -11,6 +11,7 @@ import { inlineControl, LIST_COLORS, rowBodyClass } from '../ui/listStyles'
 import { SeverityLadder, TimePreview } from './EffectPreview'
 import { Segmented } from './fields'
 import { TYPE_INFO, emptyForm, formFromTask, inputFromForm, validate, type FieldErrors, type TaskForm } from './taskForm'
+import { CheckIcon, MinusIcon, PlusIcon } from '../ui/Icons'
 
 /** iOS system colors for the row icons. */
 const ICON = { red: '#ff3b30', orange: '#ff9500', blue: '#007aff', green: '#34c759', purple: '#af52de', gray: '#8e8e93', indigo: '#5856d6' }
@@ -174,9 +175,7 @@ function Editor({ task }: { task?: TaskDefinition }) {
                 <span className={rowBodyClass}>
                   <span className="flex-1 text-[17px]">{effect.label}</span>
                   {form.effectKey === effect.key && (
-                    <span className="text-lg font-semibold text-tint" aria-hidden>
-                      ✓
-                    </span>
+                    <CheckIcon size={20} strokeWidth={2.75} className="text-tint" />
                   )}
                 </span>
               </button>
@@ -289,9 +288,9 @@ function ScheduleRows({
                       onClick={() => setMeter({ slots: meter.slots.filter((_, j) => j !== i) })}
                       disabled={meter.slots.length <= 1}
                       aria-label={`Remove time ${i + 1}`}
-                      className="grid size-[22px] place-items-center rounded-full bg-[#ff3b30] text-base leading-none font-bold text-white disabled:opacity-30"
+                      className="grid size-[22px] place-items-center rounded-full bg-[#ff3b30] text-white disabled:opacity-30"
                     >
-                      −
+                      <MinusIcon size={14} strokeWidth={3} />
                     </button>
                   }
                   label={`Time ${i + 1}`}
@@ -311,8 +310,8 @@ function ScheduleRows({
                 <li className="group">
                   <button type="button" onClick={() => setMeter({ slots: [...meter.slots, meter.slots.at(-1) ?? '12:00'] })} className="flex w-full items-stretch pl-4 text-left hover:bg-fill">
                     <span className="flex items-center pr-3">
-                      <span className="grid size-[22px] place-items-center rounded-full bg-[#34c759] text-base leading-none font-bold text-white" aria-hidden>
-                        +
+                      <span className="grid size-[22px] place-items-center rounded-full bg-[#34c759] text-white" aria-hidden>
+                        <PlusIcon size={14} strokeWidth={3} />
                       </span>
                     </span>
                     <span className={`${rowBodyClass} text-[17px] text-tint`}>Add a time</span>

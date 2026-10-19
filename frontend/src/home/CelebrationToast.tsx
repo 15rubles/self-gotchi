@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { CloseIcon } from '../ui/Icons'
 
 /** Top-of-screen banner for a perfect day, a new room reward or a streak milestone. */
 export function CelebrationToast({ messages, onClose, timeoutMs = 5000 }: { messages: string[]; onClose: () => void; timeoutMs?: number }) {
@@ -19,8 +20,8 @@ export function CelebrationToast({ messages, onClose, timeoutMs = 5000 }: { mess
           </li>
         ))}
       </ul>
-      <button type="button" onClick={onClose} className="absolute top-2 right-3 text-lg text-label-3" aria-label="Dismiss">
-        ×
+      <button type="button" onClick={onClose} className="absolute top-2 right-2 grid size-7 place-items-center rounded-full text-label-3 hover:bg-fill" aria-label="Dismiss">
+        <CloseIcon size={14} />
       </button>
     </div>
   )
