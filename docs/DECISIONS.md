@@ -119,3 +119,4 @@ Choices made where `DESIGN.md` is ambiguous or silent. Newest at the bottom of e
 - Default head anchors per style; hand-tuned anchors are kept across runs only while the style stays the same.
 - Head anchors may carry an optional `belly` point, for poses where the belly isn't below the head (the chibi EXHAUSTED frame lies on its side). Chibi defaults were measured on the first generated set.
 - Network errors (`fetch failed`, socket resets) are retried like 5xx; the first full run hit three.
+- Frames are stored as **WebP** (quality 90, alpha kept; converted with `sharp`, now an explicit dev dependency). The PWA precaches every frame, and 24 PNGs made the install 27 MB; WebP brings it to 2.6 MB while keeping the character available offline. Older PNG/JPG frames are converted on the next run without any API call, and the app only bundles `generated/*.webp`, so leftovers aren't shipped.

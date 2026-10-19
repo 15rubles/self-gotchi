@@ -13,7 +13,8 @@ interface GeneratedFile {
 }
 
 const generatedJson = import.meta.glob('../../local-avatar/generated/avatar.json', { eager: true, import: 'default' })
-const generatedImages = import.meta.glob('../../local-avatar/generated/*.{jpg,jpeg,png,webp}', {
+// WebP only: older PNG/JPG frames may still sit next to their converted copies and would be bundled too.
+const generatedImages = import.meta.glob('../../local-avatar/generated/*.webp', {
   eager: true,
   query: '?url',
   import: 'default',

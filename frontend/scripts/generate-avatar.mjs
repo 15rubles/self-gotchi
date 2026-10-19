@@ -11,13 +11,14 @@
 // Pipeline (DESIGN.md "Consistency strategy"): photo -> master (normal pose, neutral face) ->
 // 3 more poses edited from the master -> each pose edited into the 5 other expressions.
 // Every variant is derived from the master, never from scratch, so it stays the same person.
-// Output (gitignored): src/local-avatar/generated/<POSE>_<FACE>.<png|jpg> + avatar.json.
+// Output (gitignored): src/local-avatar/generated/<POSE>_<FACE>.webp + avatar.json.
 //
 // PRIVACY: this sends your photo to OpenAI (or Google with --provider gemini). Nothing is sent with --dry-run.
 
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import sharp from 'sharp'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const avatarDir = path.resolve(here, '../src/local-avatar')
@@ -42,14 +43,12 @@ const PROVIDERS = {
     key: process.env.OPENAI_API_KEY,
     keyName: 'OPENAI_API_KEY',
     model: process.env.OPENAI_IMAGE_MODEL ?? 'gpt-image-2.5-flare',
-    ext: 'png',
   },
   gemini: {
     label: 'Google Gemini',
     key: process.env.GEMINI_API_KEY,
     keyName: 'GEMINI_API_KEY',
     model: process.env.GEMINI_IMAGE_MODEL ?? 'gemini-3.1-flash-image',
-    ext: 'jpg',
   },
 }
 const provider = PROVIDERS[PROVIDER]
@@ -297,7 +296,9 @@ async function generate(prompt, references) {
 
 // ---- pipeline ------------------------------------------------------------------------------
 
-const frameFile = (pose, face) => path.join(outDir, `${pose}_${face}.${provider.ext}`)
+// WebP keeps the transparency at a tenth of the PNG size (the PWA precaches every frame).
+const frameFile = (pose, face) => path.join(outDir, `${pose}_${face}.webp`)
+const toWebp = (bytes) => sharp(bytes).webp({ quality: 90, alphaQuality: 90, effort: 6 }).toBuffer()
 /** Frames made during this run, so --force regenerates each one once. */
 const madeThisRun = new Set()
 
@@ -316,7 +317,20 @@ async function make(pose, face, prompt, references) {
   const file = frameFile(pose, face)
   console.log(`- ${pose}/${face}`)
   const bytes = DRY_RUN ? fs.readFileSync(references.at(-1)) : await generate(prompt, references)
-  fs.writeFileSync(file, bytes)
+  fs.writeFileSync(file, await toWebp(bytes))
+}
+
+/** Converts frames from before the switch to WebP (no API call); the originals are left alone. */
+async function convertLegacyFrames() {
+  for (const pose of POSES) {
+    for (const face of FACES) {
+      const file = frameFile(pose, face)
+      const legacy = ['png', 'jpg'].map((ext) => path.join(outDir, `${pose}_${face}.${ext}`)).find((f) => fs.existsSync(f))
+      if (fs.existsSync(file) || !legacy) continue
+      fs.writeFileSync(file, await toWebp(fs.readFileSync(legacy)))
+      console.log(`- ${pose}/${face}: converted ${path.basename(legacy)} to WebP`)
+    }
+  }
 }
 
 /** Ensures a frame exists, generating it (and what it depends on) if needed. */
@@ -366,23 +380,23 @@ function writeManifest() {
 async function main() {
   if (!style) throw new Error(`--style must be one of: ${Object.keys(STYLES).join(', ')}`)
   if (!provider) throw new Error(`--provider must be one of: ${Object.keys(PROVIDERS).join(', ')}`)
-  if (!DRY_RUN && !provider.key) {
-    console.error(`Set ${provider.keyName} or use --dry-run.`)
-    process.exitCode = 1
-    return
-  }
   const photo = findPhoto()
   fs.mkdirSync(outDir, { recursive: true })
-  console.log(
-    DRY_RUN
-      ? 'Dry run: no API calls, frames are copies of your photo.'
-      : `Sending ${path.basename(photo)} to ${provider.label} (${provider.model}), style ${STYLE_NAME}. Output: ${outDir}`,
-  )
-  for (const pose of POSES) {
-    for (const face of FACES) {
-      if (wanted(pose, face)) await ensure(pose, face, photo)
+  await convertLegacyFrames()
+  const todo = POSES.flatMap((pose) => FACES.filter((face) => wanted(pose, face)).map((face) => [pose, face]))
+  if (todo.length > 0) {
+    if (!DRY_RUN && !provider.key) {
+      console.error(`Set ${provider.keyName} or use --dry-run.`)
+      process.exitCode = 1
+      return
     }
+    console.log(
+      DRY_RUN
+        ? 'Dry run: no API calls, frames are copies of your photo.'
+        : `Sending ${path.basename(photo)} to ${provider.label} (${provider.model}), style ${STYLE_NAME}. Output: ${outDir}`,
+    )
   }
+  for (const [pose, face] of todo) await ensure(pose, face, photo)
   writeManifest()
 }
 

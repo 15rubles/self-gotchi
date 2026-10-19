@@ -32,7 +32,7 @@ Other styles and providers:
 - `--provider gemini` with `GEMINI_API_KEY`: Google Gemini (`GEMINI_IMAGE_MODEL`, default
   `gemini-3.1-flash-image`). Needs a billed project; the free tier allows no image generation.
 
-Output goes to `generated/`: `<POSE>_<FACE>.png` (`.jpg` from Gemini) plus `avatar.json`. Check them
+Output goes to `generated/`: `<POSE>_<FACE>.webp` plus `avatar.json`. Check them
 at http://localhost:5173/gallery. If the smell, "grrr" or thought bubble sit in the wrong place,
 open `/gallery?anchors` and adjust `poseAnchors` in `generated/avatar.json` (canvas is 1024x1024;
 `x`,`y` = middle of the face, `scale` 1 ≈ a 440px-wide face).
