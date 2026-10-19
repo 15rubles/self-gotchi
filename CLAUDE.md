@@ -24,7 +24,7 @@ npm install
 npm run dev                                # :5173, proxies /api, /login, /logout to :8080
 npm run build                              # type-check + production build
 npm run lint
-npm run avatar:generate                    # realistic avatar frames from src/local-avatar/photo.jpg (needs GEMINI_API_KEY; sends the photo to Google)
+npm run avatar:generate                    # chibi avatar frames from src/local-avatar/photo.jpg (needs OPENAI_API_KEY; sends the photo to OpenAI)
 
 # One origin (installable PWA): build the frontend, then the backend serves frontend/dist on :8080
 cd frontend && npm run build && cd ../backend && ./mvnw spring-boot:run

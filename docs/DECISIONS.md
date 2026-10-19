@@ -110,3 +110,12 @@ Choices made where `DESIGN.md` is ambiguous or silent. Newest at the bottom of e
 - vite-plugin-pwa: `autoUpdate`, standalone, portrait; icons generated from `public/favicon.svg` by `@vite-pwa/assets-generator` (minimal 2023 preset). The service worker precaches the app shell but never serves `/api`, `/login`, `/logout` from cache.
 - The single-photo overlay mode is now dev-only and lazily loaded, so a personal photo in `src/local-avatar/` is never part of a production build.
 - No push notifications (Phase 1 scope); the PWA is installable only.
+
+## Chibi avatar with OpenAI (user request)
+- The user got an OpenAI API key and chose a **chibi of themselves** (DESIGN.md's original style) over the photorealistic frames. Still the local opt-in generator, not the Phase 2 in-app pipeline, so the "no AI image generation in Phase 1" rule keeps the same exception as before: nothing in the app calls a provider.
+- `--provider openai|gemini` (OpenAI by default when `OPENAI_API_KEY` is set) and `--style chibi|photo` (chibi by default). OpenAI: `POST /v1/images/edits`, multipart with every reference as `image[]`, model `gpt-image-2.5-flare` (`OPENAI_IMAGE_MODEL`), 1024x1024 PNG, quality `medium` (`OPENAI_IMAGE_QUALITY`). `input_fidelity=high` is only sent to `gpt-image-1`/`1.5`, the models that accept it. Errors for an empty balance (`insufficient_quota`, billing) aren't retried.
+- Chibi frames have a **transparent background**, so they sit on the drawn room and get the cartoon smell, growl, flies, thought bubble and bob, exactly like the illustrated placeholders. `avatar.json` gains `style`; the manifest carries it as `frameStyle`, and `CharacterStage` treats only `photo` frames as realistic. Files without `style` are photo frames (they predate it).
+- Same derivation chain as the photo style: photo -> master; poses edited from [master, photo]; expressions edited from each pose's neutral frame. Pose and expression prompts reuse the exaggerated illustrated look (buckled knees, collapsed on the floor, couch + chips + sweatpants; squeezed-eye grin, sweat drops, tears, spiral eyes and a drifting soul).
+- Default head anchors per style; hand-tuned anchors are kept across runs only while the style stays the same.
+- Head anchors may carry an optional `belly` point, for poses where the belly isn't below the head (the chibi EXHAUSTED frame lies on its side). Chibi defaults were measured on the first generated set.
+- Network errors (`fetch failed`, socket resets) are retried like 5xx; the first full run hit three.

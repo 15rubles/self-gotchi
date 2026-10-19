@@ -6,6 +6,8 @@ import { placeholderManifest, type AssetManifest, type FrameKey, type HeadAnchor
 interface GeneratedFile {
   avatarId: string
   styleVersion: number
+  /** Missing in files from before the chibi style existed, which were all photos. */
+  style?: 'photo' | 'chibi'
   poseAnchors: Partial<Record<Pose, HeadAnchor>>
   frames: Partial<Record<FrameKey, string>>
 }
@@ -36,13 +38,14 @@ function buildGenerated(file: GeneratedFile): AssetManifest | null {
     poses: { NORMAL: neutral('NORMAL'), TIRED: neutral('TIRED'), EXHAUSTED: neutral('EXHAUSTED'), LAZY: neutral('LAZY') },
     faces: Object.fromEntries(faceKeys.map((f) => [f, frames[`NORMAL/${f}`] ?? neutral('NORMAL')])) as Record<Face, string>,
     frames,
+    frameStyle: file.style ?? 'photo',
     poseAnchors: file.poseAnchors,
   }
 }
 
 const generatedFile = Object.values(generatedJson)[0] as GeneratedFile | undefined
 
-/** AI-generated frames of the user, when `npm run avatar:generate` has been run. */
+/** AI-generated frames of the user (chibi or photo), when `npm run avatar:generate` has been run. */
 export const generatedManifest: AssetManifest | null = generatedFile ? buildGenerated(generatedFile) : null
 
 /**

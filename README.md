@@ -149,10 +149,10 @@ see every pose, face, room level and effect, open `/gallery` in the dev server.
 The renderer reads an asset manifest in the design doc's format, so other art can be dropped
 in without changing the screen:
 
-- **AI-generated photos of you** (optional, sends your photo to Google): put a photo at
-  `frontend/src/local-avatar/photo.jpg`, set `GEMINI_API_KEY` (this needs a Google AI project
-  with billing; the free tier allows no image generation), and run
-  `npm run avatar:generate` in `frontend/`. See
+- **An AI-generated chibi of you** (optional, sends your photo to OpenAI): put a photo at
+  `frontend/src/local-avatar/photo.jpg`, set `OPENAI_API_KEY` (an OpenAI API account with
+  credit), and run `npm run avatar:generate` in `frontend/`. A photorealistic style
+  (`--style photo`) and Google Gemini (`--provider gemini`) are also supported. See
   [`frontend/src/local-avatar/README.md`](frontend/src/local-avatar/README.md).
 - Your photos and generated images are gitignored and never committed.
 

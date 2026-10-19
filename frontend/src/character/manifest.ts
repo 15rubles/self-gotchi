@@ -9,7 +9,7 @@ export interface AssetManifest {
   avatarId: string
   styleVersion: number
   /** Center of the head on the 1024x1024 canvas; faces are drawn centered here. */
-  headAnchor: { x: number; y: number; scale: number }
+  headAnchor: HeadAnchor
   poses: Record<Pose, string>
   faces: Record<Face, string>
   /**
@@ -23,6 +23,11 @@ export interface AssetManifest {
    * can't be layered convincingly, so each combination is its own photo.
    */
   frames?: Partial<Record<FrameKey, string>>
+  /**
+   * How generated frames are drawn: `photo` (default) is a realistic scene of its own with
+   * realistic overlays; `chibi` is a cut-out character on the illustrated room and effects.
+   */
+  frameStyle?: 'photo' | 'chibi'
   /** Head center/size per pose when it differs between frames (falls back to headAnchor). */
   poseAnchors?: Partial<Record<Pose, HeadAnchor>>
 }
@@ -33,6 +38,8 @@ export interface HeadAnchor {
   x: number
   y: number
   scale: number
+  /** Belly point when it isn't below the head (e.g. a character lying on its side). */
+  belly?: Point
 }
 
 /** The frame for a pose + face, falling back to the closest one that exists. */
@@ -87,10 +94,10 @@ export const placeholderManifest: AssetManifest = {
  * Offsets are in canvas units at scale 1.
  */
 export function anchors(manifest: AssetManifest, pose?: Pose) {
-  const { x, y, scale } = (pose && manifest.poseAnchors?.[pose]) || manifest.headAnchor
+  const { x, y, scale, belly } = (pose && manifest.poseAnchors?.[pose]) || manifest.headAnchor
   return {
     mouth: { x: x, y: y + 95 * scale },
-    belly: { x: x, y: y + 330 * scale },
+    belly: belly ?? { x: x, y: y + 330 * scale },
     thought: { x: x + 250 * scale, y: y - 200 * scale },
     head: { x, y, scale },
   }

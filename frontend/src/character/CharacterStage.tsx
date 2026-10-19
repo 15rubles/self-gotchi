@@ -20,9 +20,9 @@ const pct = (units: number) => `${(units / CANVAS) * 100}%`
  * 1 room, 2 body pose, 3 face at the head anchor, 4 body effects, 5 thought icons.
  *
  * Three kinds of manifest render here: layered art (a pose image plus a face image per state,
- * e.g. the illustrated placeholders), generated frames (one realistic image per pose + face,
- * cross-faded), and a single real photo with states as treatments and overlays. The realistic
- * kinds are their own room: mess, smell and icons are drawn over them.
+ * e.g. the illustrated placeholders), generated frames (one image per pose + face, cross-faded),
+ * and a single real photo with states as treatments and overlays. Realistic photos are their own
+ * room: mess, smell and icons are drawn over them. Chibi frames are cut-outs on the drawn room.
  *
  * @param celebrateKey bump to play the completion sparkle + hop
  */
@@ -43,8 +43,8 @@ export function CharacterStage({
   const a = anchors(manifest, state.pose)
   const photo = manifest.photo
   const frame = pickFrame(manifest, state.pose, state.face)
-  /** Real-photo look: a single photo with overlays, or generated frames. */
-  const realistic = Boolean(photo || frame)
+  /** Real-photo look: a single photo with overlays, or generated photo frames (chibi frames use the drawn room and effects). */
+  const realistic = Boolean(photo || (frame && manifest.frameStyle !== 'chibi'))
   const has = (key: Effect['key']) => state.effects.some((e) => e.key === key)
   const effects = useFadeOut(
     state.effects.filter((e) => e.key === 'MOUTH_SMELL' || e.key === 'BELLY_GROWL'),
