@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
+import { NewHabitLink } from "./NewHabitLink";
 import { useTasks } from "../api/hooks";
 import type { TaskDefinition } from "../api/types";
 import { effectEmoji } from "../lib/format";
@@ -43,18 +44,7 @@ export function TasksPage() {
       <PageTitle
         title="Habits"
         action={
-          <Link
-            to="/tasks/new"
-            className="flex items-center gap-1 text-[17px] font-semibold text-tint hover:opacity-70"
-          >
-            <span
-              className="grid size-6 place-items-center rounded-full bg-tint text-base leading-none text-white"
-              aria-hidden
-            >
-              +
-            </span>
-            New habit
-          </Link>
+          <NewHabitLink />
         }
       />
 

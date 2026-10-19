@@ -5,6 +5,7 @@ import { CharacterStage } from '../character/CharacterStage'
 import { formatDay, formatTime, rewardName } from '../lib/format'
 import { celebrationsFor } from './celebrations'
 import { CelebrationToast } from './CelebrationToast'
+import { NewHabitLink } from '../tasks/NewHabitLink'
 import { TaskList } from './TaskList'
 import { UndoToast, type UndoTarget } from './UndoToast'
 
@@ -93,6 +94,8 @@ export function HomePage() {
           {mutationError.message}
         </p>
       )}
+
+      <NewHabitLink className="w-fit px-1" />
 
       {state.tasks.length === 0 ? (
         <p className="rounded-2xl border-2 border-dashed border-sep p-6 text-center text-label-2">
