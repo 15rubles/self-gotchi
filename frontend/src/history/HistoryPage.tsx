@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
-import { useCharacterState, useHistory } from '../api/hooks'
+import { useCharacterState, useHistory, useMe } from '../api/hooks'
 import type { DayResult, HistoryTask } from '../api/types'
 import { addMonths, formatDate, monthEnd, monthStart } from '../lib/dates'
 import { effectEmoji } from '../lib/format'
 import { Card, ListSection, PageTitle, Switch } from '../ui/ListSection'
 import { LIST_COLORS, rowBodyClass } from '../ui/listStyles'
+import { DayEditor } from './DayEditor'
 import { MonthCalendar, type CalendarCell } from './MonthCalendar'
 import { LEGEND_ORDER, RESULT_STYLE, SUMMARY_LEGEND, SUMMARY_STYLE, summarize, type DaySummary } from './results'
 
@@ -21,6 +22,8 @@ export function HistoryPage() {
   const [pickedMonth, setPickedMonth] = useState<string | null>(null)
   const [pickedDay, setPickedDay] = useState<string | null>(null)
   const [showArchived, setShowArchived] = useState(false)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const { data: me } = useMe()
 
   const month = pickedMonth ?? (today ? monthStart(today) : undefined)
   const end = month && today ? (monthEnd(month) < today ? monthEnd(month) : today) : undefined
@@ -121,7 +124,21 @@ export function HistoryPage() {
         <Legend single={Boolean(task)} />
       </Card>
 
-      {data && selected && (task ? <TaskDay task={task} date={selected} /> : <AllDay tasks={tasks} date={selected} summary={summaries.get(selected)} />)}
+      {data && selected && (task ? (
+        <TaskDay task={task} date={selected} onEdit={setEditingId} />
+      ) : (
+        <AllDay tasks={tasks} date={selected} summary={summaries.get(selected)} onEdit={setEditingId} />
+      ))}
+      {selected && today && me && (
+        <DayEditor
+          task={tasks.find((t) => t.id === editingId) ?? null}
+          date={selected}
+          today={today}
+          zone={me.timezone}
+          resetHour={me.dayResetHour}
+          onClose={() => setEditingId(null)}
+        />
+      )}
       {data && tasks.length === 0 && <Card className="p-6 text-center text-label-2">No habits yet.</Card>}
 
       <Switch checked={showArchived} onChange={setShowArchived} label="Show archived" />
@@ -155,7 +172,7 @@ function Stat({ icon, label, value, unit }: { icon: string; label: string; value
 }
 
 /** Every habit's result on one day, as a list; habits with nothing due that day come last, muted. */
-function AllDay({ tasks, date, summary }: { tasks: HistoryTask[]; date: string; summary?: DaySummary }) {
+function AllDay({ tasks, date, summary, onEdit }: { tasks: HistoryTask[]; date: string; summary?: DaySummary; onEdit: (taskId: number) => void }) {
   const rows = tasks.map((task) => ({ task, day: task.days.find((d) => d.date === date) }))
   const counts = (r: (typeof rows)[number]) => Boolean(r.day && r.day.result !== 'OFF' && r.day.result !== 'NONE')
   const ordered = [...rows.filter(counts), ...rows.filter((r) => !counts(r))]
@@ -169,48 +186,70 @@ function AllDay({ tasks, date, summary }: { tasks: HistoryTask[]; date: string; 
       countLabel={hasCount ? `${summary.done} of ${summary.due} done` : 'nothing due'}
     >
       {ordered.map((r) => (
-        <ResultRow key={r.task.id} task={r.task} result={r.day?.result ?? 'NONE'} completions={r.day?.completions ?? 0} muted={!counts(r)} />
+        <ResultRow key={r.task.id} task={r.task} result={r.day?.result ?? 'NONE'} completions={r.day?.completions ?? 0} muted={!counts(r)} onEdit={onEdit} />
       ))}
     </ListSection>
   )
 }
 
-function TaskDay({ task, date }: { task: HistoryTask; date: string }) {
+function TaskDay({ task, date, onEdit }: { task: HistoryTask; date: string; onEdit: (taskId: number) => void }) {
   const day = task.days.find((d) => d.date === date)
   return (
     <ListSection id="history-day" title={formatDate(date)} color={LIST_COLORS.blue} count="" countLabel="">
-      <ResultRow task={task} result={day?.result ?? 'NONE'} completions={day?.completions ?? 0} muted={false} />
+      <ResultRow task={task} result={day?.result ?? 'NONE'} completions={day?.completions ?? 0} muted={false} onEdit={onEdit} />
     </ListSection>
   )
 }
 
-/** A habit and how it went: tinted emoji, name, grey result line, colored result badge. */
-function ResultRow({ task, result, completions, muted }: { task: HistoryTask; result: DayResult; completions: number; muted: boolean }) {
+/** A habit and how it went: tinted emoji, name, grey result line, colored result badge. Tap to edit its logs. */
+function ResultRow({
+  task,
+  result,
+  completions,
+  muted,
+  onEdit,
+}: {
+  task: HistoryTask
+  result: DayResult
+  completions: number
+  muted: boolean
+  onEdit: (taskId: number) => void
+}) {
   const s = RESULT_STYLE[result]
   const times = completions > 1 ? ` · logged ${completions}×` : ''
   return (
-    <li className="group flex items-stretch">
-      <span className="grid w-14 shrink-0 place-items-center" aria-hidden>
-        <span className={`grid size-[30px] place-items-center rounded-full bg-fill text-base ${muted ? 'opacity-50' : ''}`}>{effectEmoji[task.effectKey]}</span>
-      </span>
-      <div className={rowBodyClass}>
-        <div className="min-w-0 flex-1">
-          <p className={`truncate text-[17px] leading-snug ${muted ? 'text-label-3' : 'text-label'}`}>{task.name}</p>
-          <p className="truncate text-[15px] leading-snug text-label-2">
-            {s.label}
-            {times}
-          </p>
-        </div>
-        {s.mark && !muted && (
-          <span
-            className={`grid h-7 min-w-7 shrink-0 place-items-center rounded-full px-1.5 text-xs font-bold ${s.dashed ? 'border-2 border-dashed border-label-3' : ''}`}
-            style={{ backgroundColor: s.fill, color: s.ink }}
-            aria-hidden
-          >
-            {s.mark}
+    <li className="group">
+      <button
+        type="button"
+        onClick={() => onEdit(task.id)}
+        aria-label={`${task.name}: ${s.label}. Edit logs`}
+        className="flex w-full items-stretch text-left hover:bg-fill active:bg-fill"
+      >
+        <span className="grid w-14 shrink-0 place-items-center" aria-hidden>
+          <span className={`grid size-[30px] place-items-center rounded-full bg-fill text-base ${muted ? 'opacity-50' : ''}`}>{effectEmoji[task.effectKey]}</span>
+        </span>
+        <span className={rowBodyClass}>
+          <span className="min-w-0 flex-1">
+            <span className={`block truncate text-[17px] leading-snug ${muted ? 'text-label-3' : 'text-label'}`}>{task.name}</span>
+            <span className="block truncate text-[15px] leading-snug text-label-2">
+              {s.label}
+              {times}
+            </span>
           </span>
-        )}
-      </div>
+          {s.mark && !muted && (
+            <span
+              className={`grid h-7 min-w-7 shrink-0 place-items-center rounded-full px-1.5 text-xs font-bold ${s.dashed ? 'border-2 border-dashed border-label-3' : ''}`}
+              style={{ backgroundColor: s.fill, color: s.ink }}
+              aria-hidden
+            >
+              {s.mark}
+            </span>
+          )}
+          <span className="shrink-0 text-xl text-label-3" aria-hidden>
+            ›
+          </span>
+        </span>
+      </button>
     </li>
   )
 }

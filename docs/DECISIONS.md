@@ -155,3 +155,9 @@ Choices made where `DESIGN.md` is ambiguous or silent. Newest at the bottom of e
 - **Supersedes** the milestone 4 rule above: `APP_USER_TIMEZONE` / `APP_DAY_RESET_HOUR` now only seed a **new** users row. Settings is the source of truth after that, so a restart never undoes a change made in the app.
 - Changing the zone or reset hour re-sorts past completions into days (state and history are always derived from the log); nothing stored is rewritten.
 - The Settings screen saves each change right away (iOS style): the name on blur/Enter, zone and hour on selection. The zone list is the browser's `Intl.supportedValuesOf('timeZone')`, with a one-tap "Use this device's time zone".
+
+## Fixing past days (milestone 9)
+- `GET /api/v1/completions?date=YYYY-MM-DD` (required) lists the user's logs on one **logical** day, `[start, end)` in the user's zone with the reset hour (a log exactly at 04:00 is the new day), oldest first. Adding uses the existing `POST /tasks/{id}/complete` with `completedAt`; deleting uses `DELETE /completions/{id}`. Their rules are unchanged: not in the future (1 min tolerance), not before the task existed.
+- History: every habit in the selected day's list opens a bottom sheet (native `<dialog>`: Esc and backdrop close it) with that day's logs (time + Delete) and "Add a log" at a time. Muted rows (nothing due) open too, so a workout or cleaning can be added on any day.
+- The time picker means the wall clock in the **user's** time zone, not the browser's: `lib/dates.zonedInstant` converts with `Intl` (two passes, DST-safe). A time before the reset hour is the early morning after the chosen date (01:30 with a 04:00 start), matching how the engine buckets days.
+- Completing, undoing, logging and changing settings all invalidate the `['completions']` query so the sheet, calendar and Home stay in sync.

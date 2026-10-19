@@ -375,6 +375,70 @@ class ApiIntegrationTest {
         }
     }
 
+    // ---- a day's log -------------------------------------------------------------------------
+
+    @Nested
+    class DayLog {
+
+        void completeAt(long taskId, String berlinTime) throws Exception {
+            send(post("/api/v1/tasks/" + taskId + "/complete"), """
+                {"completedAt": "%s"}""".formatted(berlin(berlinTime)))
+                .andExpect(status().isCreated());
+        }
+
+        @Test
+        void listsTheLogicalDaysCompletionsOldestFirst() throws Exception {
+            long teeth = createTask(TEETH); // created 2026-10-01 12:00
+            long food = createTask(PREP_FOOD);
+            clock.set(berlin("2026-10-02T12:00"));
+            completeAt(teeth, "2026-10-01T20:00");
+            completeAt(food, "2026-10-02T01:30"); // before the 04:00 reset: still Oct 1
+            completeAt(teeth, "2026-10-02T08:00");
+
+            call(get("/api/v1/completions").param("date", "2026-10-01"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].taskId").value(teeth))
+                .andExpect(jsonPath("$[0].completedAt").value(berlin("2026-10-01T20:00").toString()))
+                .andExpect(jsonPath("$[1].taskId").value(food));
+
+            call(get("/api/v1/completions").param("date", "2026-10-02"))
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].completedAt").value(berlin("2026-10-02T08:00").toString()));
+        }
+
+        @Test
+        void aCompletionExactlyAtTheResetBelongsToTheNewDay() throws Exception {
+            long teeth = createTask(TEETH);
+            clock.set(berlin("2026-10-02T12:00"));
+            completeAt(teeth, "2026-10-02T04:00");
+
+            call(get("/api/v1/completions").param("date", "2026-10-01")).andExpect(jsonPath("$", empty()));
+            call(get("/api/v1/completions").param("date", "2026-10-02")).andExpect(jsonPath("$", hasSize(1)));
+        }
+
+        @Test
+        void dateIsRequired() throws Exception {
+            call(get("/api/v1/completions")).andExpect(status().isBadRequest());
+            call(get("/api/v1/completions").param("date", "yesterday")).andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void anotherUsersCompletionsAreNotListed() throws Exception {
+            User other = users.save(new User("other@test.local", "Other", BERLIN, 4, clock.instant()));
+            Task theirs = new Task(other.getId(), clock.instant());
+            theirs.update("Their task", Category.MENTAL, TaskType.CHECK, EffectKey.BOOK,
+                "{\"type\":\"CHECK\",\"deadline\":\"21:00\"}", 0, clock.instant());
+            taskRepository.save(theirs);
+            completionRepository.save(
+                new TaskCompletion(theirs.getId(), other.getId(), clock.instant(), CompletionSource.APP, clock.instant()));
+
+            call(get("/api/v1/completions").param("date", "2026-10-01")).andExpect(jsonPath("$", empty()));
+            call(get("/api/v1/completions").param("date", "2026-10-01"), "other@test.local")
+                .andExpect(jsonPath("$", hasSize(1)));
+        }
+    }
+
     // ---- history ------------------------------------------------------------------------------
 
     @Nested

@@ -56,6 +56,17 @@ public class CompletionService {
         completions.delete(completion);
     }
 
+    /** The user's completions in {@code [from, to)}, oldest first (for the history day editor). */
+    @Transactional(readOnly = true)
+    public List<TaskCompletion> between(User user, Instant from, Instant toExclusive) {
+        return completions
+            .findByUserIdAndCompletedAtGreaterThanEqualAndCompletedAtLessThanEqualOrderByCompletedAtAsc(
+                user.getId(), from, toExclusive.minusNanos(1))
+            .stream()
+            .filter(c -> c.getCompletedAt().isBefore(toExclusive))
+            .toList();
+    }
+
     /** Completions in {@code [from, to]} as engine log entries, oldest first. */
     @Transactional(readOnly = true)
     public List<CompletionLog> logs(User user, Instant from, Instant to) {

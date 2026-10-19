@@ -32,3 +32,39 @@ export function addMonths(date: string, months: number): string {
 
 /** Last day of the month of `date`. */
 export const monthEnd = (date: string): string => addDays(addMonths(date, 1), -1)
+
+/** Milliseconds `zone` is ahead of UTC at `instant`. */
+function zoneOffset(instant: number, zone: string): number {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: zone,
+      hourCycle: 'h23',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    })
+      .formatToParts(instant)
+      .map((p) => [p.type, Number(p.value)]),
+  )
+  const wall = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second)
+  return wall - Math.floor(instant / 1000) * 1000
+}
+
+/**
+ * The instant when a wall clock in `zone` shows `date` + `time` ("2026-10-18", "08:00"), whatever
+ * the browser's own zone. Two passes settle the offset across a daylight-saving change.
+ */
+export function zonedInstant(date: string, time: string, zone: string): Date {
+  const [h, m] = time.split(':').map(Number)
+  const wall = parseDate(date) + (h * 60 + m) * 60_000
+  const first = wall - zoneOffset(wall, zone)
+  return new Date(wall - zoneOffset(first, zone))
+}
+
+/** "08:05": the wall-clock time of `instant` in `zone`. */
+export function zonedTime(instant: Date, zone: string): string {
+  return new Intl.DateTimeFormat('en-GB', { timeZone: zone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(instant)
+}

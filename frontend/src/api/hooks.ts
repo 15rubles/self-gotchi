@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetch } from './client'
-import type { CompleteResponse, HistoryResponse, Me, StateResponse, TaskDefinition, TaskInput } from './types'
+import type { CompleteResponse, CompletionResponse, HistoryResponse, Me, StateResponse, TaskDefinition, TaskInput } from './types'
 
 export const stateKey = ['state'] as const
 
@@ -40,6 +40,7 @@ export function useUpdateMe() {
       client.setQueryData(['me'], me)
       void client.invalidateQueries({ queryKey: stateKey })
       void client.invalidateQueries({ queryKey: ['history'] })
+      void client.invalidateQueries({ queryKey: ['completions'] })
     },
   })
 }
@@ -52,6 +53,7 @@ export function useCompleteTask() {
     onSuccess: (response) => {
       client.setQueryData(stateKey, response.state)
       void client.invalidateQueries({ queryKey: ['history'] })
+      void client.invalidateQueries({ queryKey: ['completions'] })
     },
   })
 }
@@ -64,6 +66,7 @@ export function useUndoCompletion() {
     onSuccess: (state) => {
       client.setQueryData(stateKey, state)
       void client.invalidateQueries({ queryKey: ['history'] })
+      void client.invalidateQueries({ queryKey: ['completions'] })
     },
   })
 }
@@ -125,5 +128,30 @@ export function useHistory(from: string | undefined, to: string | undefined) {
     queryKey: ['history', from, to],
     queryFn: () => apiFetch<HistoryResponse>(`history?from=${from}&to=${to}`),
     enabled: Boolean(from && to),
+  })
+}
+
+// ---- one day's log (history editor) ----------------------------------------------------------
+
+/** Every log on a logical day, oldest first. */
+export function useDayCompletions(date: string | null) {
+  return useQuery({
+    queryKey: ['completions', date],
+    queryFn: () => apiFetch<CompletionResponse[]>(`completions?date=${date}`),
+    enabled: date !== null,
+  })
+}
+
+/** Logs a habit at a given moment ("I did it earlier"). */
+export function useLogCompletion() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ taskId, completedAt }: { taskId: number; completedAt: string }) =>
+      apiFetch<CompleteResponse>(`tasks/${taskId}/complete`, { method: 'POST', body: JSON.stringify({ completedAt }) }),
+    onSuccess: (response) => {
+      client.setQueryData(stateKey, response.state)
+      void client.invalidateQueries({ queryKey: ['history'] })
+      void client.invalidateQueries({ queryKey: ['completions'] })
+    },
   })
 }

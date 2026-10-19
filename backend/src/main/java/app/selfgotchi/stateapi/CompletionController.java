@@ -1,16 +1,22 @@
 package app.selfgotchi.stateapi;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import app.selfgotchi.state.LogicalDay;
 import app.selfgotchi.task.CompletionResponse;
 import app.selfgotchi.task.CompletionService;
 import app.selfgotchi.task.CompletionSource;
@@ -50,6 +56,17 @@ public class CompletionController {
         TaskCompletion completion = completions.complete(user, id,
             request == null ? null : request.completedAt(), CompletionSource.APP);
         return new CompleteResponse(CompletionResponse.from(completion), state.state(user, null));
+    }
+
+    /**
+     * Every log on one logical day (respecting the user's zone and reset hour, so 01:30 is the
+     * day before with a 04:00 reset), oldest first. The history screen edits a day with this.
+     */
+    @GetMapping("/completions")
+    public List<CompletionResponse> onDay(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        User user = currentUser.require();
+        LogicalDay day = new LogicalDay(user.getZoneId(), user.getDayResetHour());
+        return completions.between(user, day.start(date), day.end(date)).stream().map(CompletionResponse::from).toList();
     }
 
     @DeleteMapping("/completions/{id}")
