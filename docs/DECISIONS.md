@@ -120,3 +120,9 @@ Choices made where `DESIGN.md` is ambiguous or silent. Newest at the bottom of e
 - Head anchors may carry an optional `belly` point, for poses where the belly isn't below the head (the chibi EXHAUSTED frame lies on its side). Chibi defaults were measured on the first generated set.
 - Network errors (`fetch failed`, socket resets) are retried like 5xx; the first full run hit three.
 - Frames are stored as **WebP** (quality 90, alpha kept; converted with `sharp`, now an explicit dev dependency). The PWA precaches every frame, and 24 PNGs made the install 27 MB; WebP brings it to 2.6 MB while keeping the character available offline. Older PNG/JPG frames are converted on the next run without any API call, and the app only bundles `generated/*.webp`, so leftovers aren't shipped.
+
+## History as a month calendar (user request)
+- Default view is **all habits together** on a Monday-first month calendar (‹ › to change month, no going past the current month). Each day shows `done/due` and a color from the status palette: all done (good), half or more (warning), less than half (serious), nothing done (critical), today still open (dashed), nothing due (neutral). Tapping a day lists every habit's result that day; today is selected by default.
+- `done` = ON_TIME + LATE; `due` = those + PARTIAL + MISSED + PENDING. Quota and freshness habits only report days they were done, so they count on both sides on those days and not at all otherwise (no "missed" for them on a single day).
+- A dropdown switches to **one habit** (`/history?task=<id>`, linkable): the same calendar with that habit's result per day (each with a text mark: ✓, late, ½, ✗, …, –, so color is never the only cue) and its current/best streaks.
+- Replaced: the 4/12/26-week per-habit heatmaps and the "Show as table" toggle. The calendar cells carry text and the day list is a readable list, so the separate table isn't needed. Frontend only: `/history` is fetched per month.

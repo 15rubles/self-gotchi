@@ -19,3 +19,16 @@ export const daysBetween = (from: string, to: string): number => Math.round((par
 export function formatDate(date: string, options: Intl.DateTimeFormatOptions = { weekday: 'short', day: 'numeric', month: 'short' }) {
   return new Intl.DateTimeFormat(undefined, { ...options, timeZone: 'UTC' }).format(parseDate(date))
 }
+
+/** "2026-10-01" for any date in October 2026. */
+export const monthStart = (date: string): string => `${date.slice(0, 7)}-01`
+
+/** First day of the month `months` away from the month of `date`. */
+export function addMonths(date: string, months: number): string {
+  const d = new Date(parseDate(monthStart(date)))
+  d.setUTCMonth(d.getUTCMonth() + months)
+  return toDate(d.getTime())
+}
+
+/** Last day of the month of `date`. */
+export const monthEnd = (date: string): string => addDays(addMonths(date, 1), -1)
