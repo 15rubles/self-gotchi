@@ -192,8 +192,8 @@ Choices made where `DESIGN.md` is ambiguous or silent. Newest at the bottom of e
 - No API key (`OPENAI_API_KEY` empty) = the row is disabled with an explanation; uploads get 503.
 
 ## Picking between avatars (user request)
-- Finished avatars are **kept**: a new one becomes ACTIVE and the previous one goes back to READY (V6 adds the status; the  index now covers GENERATING / REVIEW / FAILED only). No ACTIVE row means the app's **built-in** art (the  frames if present, else the illustrated drawing).
--  lists , newest first;  switches (free: nothing is redrawn);  deletes a finished avatar and its files, and deleting the active one falls back to the built-in art. Drafts can't be selected or deleted this way (404); they keep .
+- Finished avatars are **kept**: a new one becomes ACTIVE and the previous one goes back to READY (V6 adds the status; the "one draft" index now covers GENERATING / REVIEW / FAILED only). No ACTIVE row means the app's **built-in** art (the `npm run avatar:generate` frames if present, else the illustrated drawing).
+- `GET /avatar` lists `avatars: [{id, createdAt, thumbnailUrl, active}]`, newest first; `PUT /avatar/active {id | null}` switches (free: nothing is redrawn); `DELETE /avatar/{id}` deletes a finished avatar and its files, and deleting the active one falls back to the built-in art. Drafts can't be selected or deleted this way (404); they keep `DELETE /avatar/draft`.
 - Settings -> Character shows the choices above the upload row: thumbnail (the neutral frame), "Built-in drawing" / "From photo, <date>", a check on the shown one. Delete is iOS edit style: the red ⊖ turns into a red **Delete** button, so one tap can't delete.
-- Finished avatars' image URLs are versioned by  (their files never change), so switching back and forth doesn't re-download; drafts use  (a redrawn master).
+- Finished avatars' image URLs are versioned by `createdAt` (their files never change), so switching back and forth doesn't re-download; drafts use `updatedAt` (a redrawn master).
 - About 3 MB per avatar on disk; there's no limit, deleting is up to the user.
