@@ -21,3 +21,6 @@ docs/*.jpeg
 docs/*.png
 frontend/src/local-avatar/*
 !frontend/src/local-avatar/README.md
+
+# Personal in-depth system design notes (not shared)
+docs/SYSTEM_DESIGN.md
