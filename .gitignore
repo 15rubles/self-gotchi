@@ -24,3 +24,6 @@ frontend/src/local-avatar/*
 
 # Personal in-depth system design notes (not shared)
 docs/SYSTEM_DESIGN.md
+
+# Avatar photos and drawn frames (Settings -> Character), never committed
+backend/data/

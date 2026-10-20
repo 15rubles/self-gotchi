@@ -43,3 +43,7 @@ open `/gallery?anchors` and adjust `poseAnchors` in `generated/avatar.json` (can
 2. otherwise the illustrated placeholders.
 
 `photo.jpg` with overlays is only a dev preview (`/gallery?art=photo`).
+
+Easier: **Settings -> Character -> Make avatar from photo** does the same on the server (needs
+`OPENAI_API_KEY` where the backend runs) and works from a phone too. An avatar made there
+wins over the frames in `generated/`.

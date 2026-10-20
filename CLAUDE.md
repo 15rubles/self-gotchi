@@ -51,8 +51,8 @@ cd backend
 - Task schedules are JSONB, decoded into the sealed interface `Schedule`
   (`CheckSchedule`, `MeterSchedule`, `QuotaSchedule`, `FreshnessSchedule`) and validated on create/update.
 - State Engine changes start with a failing test.
-- Phase 1 scope only: no AI image generation, photo upload, Web Push, OAuth, signup or monetization.
-  `avatar` and `notify` hold interfaces only.
+- Phase 1 scope only: no Web Push, OAuth, signup or monetization. Exception (user request): Settings -> Character draws the avatar from a photo on the server (`avatar` package, OpenAI; see DECISIONS.md).
+  `notify` holds interfaces only.
 - Ambiguity in the design doc: pick the simplest option, record it in `docs/DECISIONS.md`.
 - Never commit personal photos or generated avatar images: `docs/*.jpg|png` and `frontend/src/local-avatar/*` are gitignored on purpose.
 

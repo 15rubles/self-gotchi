@@ -1,9 +1,9 @@
 spring:
   servlet:
     multipart:
-      # calendar .ics uploads (the import itself rejects files over 5 MB with a clear message)
-      max-file-size: 6MB
-      max-request-size: 6MB
+      # calendar .ics files (5 MB) and avatar photos (10 MB); each endpoint checks its own limit
+      max-file-size: 11MB
+      max-request-size: 11MB
   application:
     name: self-gotchi
   datasource:
@@ -46,3 +46,12 @@ app:
     day-reset-hour: ${APP_DAY_RESET_HOUR:}
   seed:
     enabled: ${APP_SEED:true}
+  avatar:
+    # Uploaded photos (deleted once the avatar is done) and drawn frames. Relative to backend/.
+    storage-dir: ${AVATAR_STORAGE_DIR:./data/avatars}
+    openai:
+      # Settings -> Character sends your photo to OpenAI. Empty key = the feature is off.
+      api-key: ${OPENAI_API_KEY:}
+      model: ${OPENAI_IMAGE_MODEL:gpt-image-2.5-flare}
+      quality: ${OPENAI_IMAGE_QUALITY:medium}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}

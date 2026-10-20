@@ -3,23 +3,18 @@ package app.selfgotchi.avatar;
 import java.util.List;
 
 /**
- * Port to whichever AI image provider wins the Phase 0 spike (DESIGN.md, "Provider").
- * Phase 1 has no implementation; the character renders placeholder art from a local manifest.
+ * Port to the image model (OpenAI today, see {@link OpenAiImageProvider}). One operation is
+ * enough for the whole pipeline: every frame is an edit of reference images by a prompt.
  */
 public interface ImageGenerationProvider {
 
-    /** Image bytes plus their media type, e.g. {@code image/png}. */
+    /** Image bytes plus their media type, e.g. {@code image/webp}. */
     record Image(byte[] data, String mediaType) {
     }
 
-    /** Master candidates from the user's photo, using the locked style prompt. */
-    List<Image> generateFromPhoto(Image photo, String stylePrompt, int candidates);
+    /** False when no API key is set; uploads are then refused with a clear message. */
+    boolean isConfigured();
 
-    /** A new variant (e.g. a pose) generated from the approved master as the reference. */
-    Image generateWithReference(Image reference, String prompt);
-
-    /** Edits only the masked region (e.g. the face) of the source image. */
-    Image inpaint(Image source, Image mask, String prompt);
-
-    Image removeBackground(Image source);
+    /** A new 1024x1024 image with a transparent background, drawn from the references by the prompt. */
+    Image edit(String prompt, List<Image> references);
 }

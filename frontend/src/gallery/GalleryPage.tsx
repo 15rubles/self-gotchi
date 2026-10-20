@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router'
 import type { CharacterState, Face, Pose, RewardKey } from '../api/types'
 import { CharacterStage } from '../character/CharacterStage'
 import { placeholderManifest, type AssetManifest } from '../character/manifest'
-import { defaultManifest } from '../character/photo/photoAvatar'
+import { useAvatarManifest } from '../character/useAvatarManifest'
 
 const base: CharacterState = {
   pose: 'NORMAL',
@@ -91,13 +91,14 @@ export function GalleryPage() {
   const only = params.get('only')?.toLowerCase()
   const art = params.get('art')
   const [photo, setPhoto] = useState<AssetManifest | null>(null)
+  const userManifest = useAvatarManifest()
   useEffect(() => {
     // Dev only: keeps the personal photo out of production bundles entirely.
     if (import.meta.env.DEV && art === 'photo') {
       void import('../character/photo/devPhoto').then((m) => setPhoto(m.photoManifest))
     }
   }, [art])
-  const manifest = art === 'illustrated' ? placeholderManifest : art === 'photo' && photo ? photo : defaultManifest
+  const manifest = art === 'illustrated' ? placeholderManifest : art === 'photo' && photo ? photo : userManifest
   const showAnchors = params.has('anchors')
   const shown = only ? samples.filter((s) => s.title.toLowerCase().includes(only)) : samples
   return (

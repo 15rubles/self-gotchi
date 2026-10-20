@@ -6,10 +6,10 @@ import { CrossfadeImage } from './photo/CrossfadeImage'
 import { FaceOverlay } from './photo/FaceOverlay'
 import { PhotoBellyGrowl, PhotoMouthSmell, PhotoRoom } from './photo/PhotoEffects'
 import { PhotoPose } from './photo/PhotoPose'
-import { defaultManifest } from './photo/photoAvatar'
 import { BellyGrowl, MouthSmell, Sparkles } from './placeholders/effects'
 import { Room } from './placeholders/room'
 import { ThoughtBubble } from './ThoughtBubble'
+import { useAvatarManifest } from './useAvatarManifest'
 import { useBlink } from './useBlink'
 import { useFadeOut } from './useFadeOut'
 import './animations.css'
@@ -28,10 +28,11 @@ const pct = (units: number) => `${(units / CANVAS) * 100}%`
  * @param celebrateKey bump to play the completion sparkle + hop
  * @param bigCelebration a bigger burst with the next celebrateKey (perfect day, new reward)
  * @param decorations   room rewards earned with perfect days (drawn on the illustrated room)
+ * @param manifest      the art; defaults to the user's avatar (see useAvatarManifest)
  */
 export function CharacterStage({
   state,
-  manifest = defaultManifest,
+  manifest: manifestProp,
   celebrateKey = 0,
   bigCelebration = false,
   decorations = [],
@@ -47,6 +48,8 @@ export function CharacterStage({
   /** Debug: draw the head/mouth/belly/thought anchors, for tuning a manifest. */
   showAnchors?: boolean
 }) {
+  const userManifest = useAvatarManifest()
+  const manifest = manifestProp ?? userManifest
   const a = anchors(manifest, state.pose)
   const photo = manifest.photo
   const frame = pickFrame(manifest, state.pose, state.face)

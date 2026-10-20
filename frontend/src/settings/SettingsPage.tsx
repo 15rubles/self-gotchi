@@ -8,6 +8,7 @@ import { useTheme, type Theme } from '../lib/theme'
 import { Group, PageTitle } from '../ui/ListSection'
 import { rowBodyClass } from '../ui/listStyles'
 import { CheckIcon, ChevronRightIcon } from '../ui/Icons'
+import { CharacterGroup } from './CharacterGroup'
 
 const THEMES: { value: Theme; label: string }[] = [
   { value: 'system', label: 'Automatic' },
@@ -20,7 +21,7 @@ const ZONES: string[] = (Intl as unknown as { supportedValuesOf?: (key: string) 
 const HOURS = Array.from({ length: 24 }, (_, h) => h)
 const hourLabel = (h: number) => `${String(h).padStart(2, '0')}:00`
 
-/** iOS Settings-style screen: appearance (saved on this device), account (saved on the server), log out. */
+/** iOS Settings-style screen: appearance (saved on this device), account and character (saved on the server), log out. */
 export function SettingsPage() {
   const [theme, setTheme] = useTheme()
   const { data: me } = useMe()
@@ -51,6 +52,8 @@ export function SettingsPage() {
       </Group>
 
       {me ? <AccountGroup me={me} /> : <Group title="Account">{<li className="px-4 py-3 text-label-2">Loading…</li>}</Group>}
+
+      <CharacterGroup />
 
       <Group title="Import" footer="Turn Google, Outlook or Apple calendar events into habits.">
         <li className="group">

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiFetch } from './client'
-import type { CompleteResponse, CompletionResponse, HistoryResponse, Me, StateResponse, TaskDefinition, TaskInput } from './types'
+import type { AvatarResponse, CompleteResponse, CompletionResponse, HistoryResponse, Me, StateResponse, TaskDefinition, TaskInput } from './types'
 
 export const stateKey = ['state'] as const
 
@@ -153,5 +153,44 @@ export function useLogCompletion() {
       void client.invalidateQueries({ queryKey: ['history'] })
       void client.invalidateQueries({ queryKey: ['completions'] })
     },
+  })
+}
+
+// ---- avatar from a photo -------------------------------------------------------------------
+
+const avatarKey = ['avatar'] as const
+
+/** The active avatar and the one being drawn; polled every 3 s while drawing. */
+export function useAvatar() {
+  return useQuery({
+    queryKey: avatarKey,
+    queryFn: () => apiFetch<AvatarResponse>('avatar'),
+    staleTime: 60_000,
+    refetchInterval: (query) => (query.state.data?.draft?.status === 'GENERATING' ? 3_000 : false),
+  })
+}
+
+/** Sends the photo to the server, which has OpenAI draw the master. */
+export function useUploadAvatarPhoto() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (photo: Blob) => {
+      const form = new FormData()
+      form.append('photo', photo, 'photo.jpg')
+      return apiFetch<AvatarResponse>('avatar', { method: 'POST', body: form })
+    },
+    onSuccess: (avatar) => client.setQueryData(avatarKey, avatar),
+  })
+}
+
+/** approve: draw the rest; retry: redraw the master or resume; discard: cancel the draft. */
+export function useAvatarDraftAction() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (action: 'approve' | 'retry' | 'discard') =>
+      action === 'discard'
+        ? apiFetch<AvatarResponse>('avatar/draft', { method: 'DELETE' })
+        : apiFetch<AvatarResponse>(`avatar/draft/${action}`, { method: 'POST' }),
+    onSuccess: (avatar) => client.setQueryData(avatarKey, avatar),
   })
 }

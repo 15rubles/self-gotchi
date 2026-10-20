@@ -223,3 +223,40 @@ export interface HistoryResponse {
   to: string
   tasks: HistoryTask[]
 }
+
+// ---- avatar from a photo (Settings -> Character) ---------------------------------------------
+
+export interface AvatarAnchor {
+  x: number
+  y: number
+  scale: number
+  belly?: { x: number; y: number } | null
+}
+
+/** The finished avatar: frame URLs by `"POSE/FACE"`, blink URLs by pose. */
+export interface ActiveAvatar {
+  id: number
+  style: 'chibi' | 'photo'
+  styleVersion: number
+  poseAnchors: Partial<Record<Pose, AvatarAnchor>>
+  frames: Record<string, string>
+  blinks: Partial<Record<Pose, string>>
+}
+
+/** The avatar being made: MASTER is drawn first for review, FRAMES are the rest. */
+export interface AvatarDraft {
+  id: number
+  status: 'GENERATING' | 'REVIEW' | 'FAILED'
+  step: 'MASTER' | 'FRAMES'
+  done: number
+  total: number
+  error: string | null
+  masterUrl: string | null
+}
+
+export interface AvatarResponse {
+  /** False when the server has no image API key. */
+  available: boolean
+  active: ActiveAvatar | null
+  draft: AvatarDraft | null
+}
