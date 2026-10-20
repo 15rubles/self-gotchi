@@ -1,6 +1,8 @@
 package app.selfgotchi.avatar;
 
 import java.time.Instant;
+import java.util.EnumSet;
+import java.util.Set;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,14 +15,22 @@ import jakarta.persistence.Table;
 
 /**
  * A character drawn from the user's photo. While it's being made it's the user's draft
- * (GENERATING / REVIEW / FAILED); once every frame exists it becomes the ACTIVE avatar and
- * replaces the previous one. The images themselves are files in {@link AvatarStorage}.
+ * (GENERATING / REVIEW / FAILED); once every frame exists it becomes the ACTIVE avatar and the
+ * previous one goes back to READY, so the user can switch between finished avatars.
+ * The images themselves are files in {@link AvatarStorage}.
  */
 @Entity
 @Table(name = "avatars")
 public class Avatar {
 
-    public enum Status { GENERATING, REVIEW, ACTIVE, FAILED }
+    public enum Status {
+        GENERATING, REVIEW, FAILED, READY, ACTIVE;
+
+        /** The avatar being made (at most one per user). */
+        public static final Set<Status> DRAFT = EnumSet.of(GENERATING, REVIEW, FAILED);
+        /** Finished avatars the user can pick from. */
+        public static final Set<Status> FINISHED = EnumSet.of(READY, ACTIVE);
+    }
 
     /** MASTER: the one image you approve first. FRAMES: every other pose, face and blink, drawn from it. */
     public enum Step { MASTER, FRAMES }

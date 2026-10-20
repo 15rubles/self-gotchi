@@ -1,6 +1,7 @@
 package app.selfgotchi.avatar;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -103,22 +104,24 @@ public class AvatarGenerator {
         }
     }
 
-    /** The finished draft replaces the active avatar; the photo isn't needed any more. */
+    /** The finished draft becomes the active avatar (the previous one stays, to switch back); the photo goes. */
     private void activate(long userId, long avatarId) {
-        Optional<Avatar> previous = tx.execute(status -> {
-            Optional<Avatar> draft = avatars.findByIdAndUserId(avatarId, userId);
-            if (draft.isEmpty()) {
-                return Optional.empty();
-            }
-            Optional<Avatar> old = avatars.findByUserIdAndStatus(userId, Avatar.Status.ACTIVE);
-            old.ifPresent(avatars::delete);
-            avatars.flush(); // the old row must be gone before the unique "one active" index sees the new one
-            draft.get().finish(Avatar.Status.ACTIVE, clock.instant());
-            storage.delete(draft.get(), AvatarStyle.PHOTO);
-            return old;
-        });
-        if (previous != null) {
-            previous.ifPresent(storage::deleteAll);
+        tx.executeWithoutResult(status -> avatars.findByIdAndUserId(avatarId, userId).ifPresent(draft -> {
+            draft.finish(Avatar.Status.READY, clock.instant());
+            storage.delete(draft, AvatarStyle.PHOTO);
+            select(avatars, userId, draft, clock.instant());
+        }));
+    }
+
+    /**
+     * Makes {@code chosen} the active avatar, or none (the built-in art) when null. Call inside a
+     * transaction.
+     */
+    static void select(AvatarRepository avatars, long userId, Avatar chosen, Instant now) {
+        avatars.findByUserIdAndStatus(userId, Avatar.Status.ACTIVE).ifPresent(old -> old.finish(Avatar.Status.READY, now));
+        avatars.flush(); // the old one must leave ACTIVE before the unique "one active" index sees the new one
+        if (chosen != null) {
+            chosen.finish(Avatar.Status.ACTIVE, now);
         }
     }
 

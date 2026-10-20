@@ -254,9 +254,20 @@ export interface AvatarDraft {
   masterUrl: string | null
 }
 
+/** A finished avatar in the picker. */
+export interface AvatarChoice {
+  id: number
+  createdAt: string
+  thumbnailUrl: string | null
+  active: boolean
+}
+
 export interface AvatarResponse {
   /** False when the server has no image API key. */
   available: boolean
+  /** Null: the app's built-in art is shown. */
   active: ActiveAvatar | null
+  /** Every finished avatar, newest first. */
+  avatars: AvatarChoice[]
   draft: AvatarDraft | null
 }

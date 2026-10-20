@@ -194,3 +194,21 @@ export function useAvatarDraftAction() {
     onSuccess: (avatar) => client.setQueryData(avatarKey, avatar),
   })
 }
+
+/** Shows a finished avatar, or the built-in art with `null`. */
+export function useSelectAvatar() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number | null) => apiFetch<AvatarResponse>('avatar/active', { method: 'PUT', body: JSON.stringify({ id }) }),
+    onSuccess: (avatar) => client.setQueryData(avatarKey, avatar),
+  })
+}
+
+/** Deletes a finished avatar and its images (the built-in art takes over if it was shown). */
+export function useDeleteAvatar() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => apiFetch<AvatarResponse>(`avatar/${id}`, { method: 'DELETE' }),
+    onSuccess: (avatar) => client.setQueryData(avatarKey, avatar),
+  })
+}

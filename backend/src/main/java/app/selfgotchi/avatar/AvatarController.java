@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -22,12 +24,16 @@ import app.selfgotchi.avatar.ImageGenerationProvider.Image;
 import app.selfgotchi.user.CurrentUserService;
 
 /**
- * Settings -> Character: upload a photo, review the master drawing, approve to draw the rest.
+ * Settings -> Character: upload a photo, review the master drawing, approve to draw the rest;
+ * pick which finished avatar to show, delete old ones.
  * Drawing runs in the background; the app polls {@code GET /avatar} for progress.
  */
 @RestController
 @RequestMapping("/api/v1/avatar")
 public class AvatarController {
+
+    public record SelectRequest(Long id) {
+    }
 
     private final AvatarService avatars;
     private final CurrentUserService currentUser;
@@ -62,6 +68,18 @@ public class AvatarController {
     @DeleteMapping("/draft")
     public AvatarResponse discard() {
         return avatars.discard(currentUser.require());
+    }
+
+    /** Picks the avatar to show; {@code {"id": null}} switches to the app's built-in art. */
+    @PutMapping("/active")
+    public AvatarResponse select(@RequestBody SelectRequest request) {
+        return avatars.select(currentUser.require(), request.id());
+    }
+
+    /** Deletes a finished avatar (the draft has its own endpoint above). */
+    @DeleteMapping("/{id}")
+    public AvatarResponse delete(@PathVariable long id) {
+        return avatars.delete(currentUser.require(), id);
     }
 
     /** A frame; its URL carries a version, so it can be cached for good (privately: it's the user's face). */

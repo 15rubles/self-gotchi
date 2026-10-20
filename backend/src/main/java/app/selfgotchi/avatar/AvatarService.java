@@ -1,7 +1,9 @@
 package app.selfgotchi.avatar;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -18,16 +20,21 @@ import app.selfgotchi.user.User;
 
 /**
  * Avatar from a photo, in two paid steps so a bad likeness costs one image, not 28:
- * upload -> master drawn -> REVIEW -> approve -> every other frame drawn -> ACTIVE (replaces the
- * previous avatar, deletes the photo). Retry redraws the master, or resumes failed frames.
+ * upload -> master drawn -> REVIEW -> approve -> every other frame drawn -> ACTIVE (deletes the
+ * photo). Retry redraws the master, or resumes failed frames. Finished avatars are kept: the user
+ * picks the active one (or none: the app's built-in art) and deletes the ones they don't want.
  */
 @Service
 public class AvatarService {
 
     static final int MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 
-    /** The active avatar (or null) and the one being made (or null). */
-    public record AvatarResponse(boolean available, ActiveAvatar active, Draft draft) {
+    /** The active avatar (or null), every finished one to pick from, and the one being made (or null). */
+    public record AvatarResponse(boolean available, ActiveAvatar active, List<Choice> avatars, Draft draft) {
+    }
+
+    /** A finished avatar in the picker, with its neutral frame as thumbnail. */
+    public record Choice(long id, Instant createdAt, String thumbnailUrl, boolean active) {
     }
 
     /** URLs of every frame by {@code "POSE/FACE"}, blinks by pose, head anchors by pose. */
@@ -60,7 +67,12 @@ public class AvatarService {
     public AvatarResponse view(User user) {
         Optional<Avatar> active = avatars.findByUserIdAndStatus(user.getId(), Avatar.Status.ACTIVE);
         Optional<Avatar> draft = draft(user);
-        return new AvatarResponse(images.isConfigured(), active.map(this::toActive).orElse(null),
+        List<Choice> choices = avatars.findByUserIdAndStatusInOrderByCreatedAtDescIdDesc(user.getId(), Avatar.Status.FINISHED)
+            .stream()
+            .map(a -> new Choice(a.getId(), a.getCreatedAt(), url(a, AvatarStyle.MASTER.name()).orElse(null),
+                a.getStatus() == Avatar.Status.ACTIVE))
+            .toList();
+        return new AvatarResponse(images.isConfigured(), active.map(this::toActive).orElse(null), choices,
             draft.map(this::toDraft).orElse(null));
     }
 
@@ -131,6 +143,21 @@ public class AvatarService {
         return view(user);
     }
 
+    /** Switches to a finished avatar, or to the built-in art when {@code avatarId} is null. */
+    @Transactional
+    public AvatarResponse select(User user, Long avatarId) {
+        Avatar chosen = avatarId == null ? null : requireFinished(user, avatarId);
+        AvatarGenerator.select(avatars, user.getId(), chosen, clock.instant());
+        return view(user);
+    }
+
+    /** Deletes a finished avatar and its images; deleting the active one switches to the built-in art. */
+    @Transactional
+    public AvatarResponse delete(User user, long avatarId) {
+        remove(requireFinished(user, avatarId));
+        return view(user);
+    }
+
     /** One stored frame of the user's own avatar; the photo itself is never served. */
     @Transactional(readOnly = true)
     public Image file(User user, long avatarId, String name) {
@@ -150,7 +177,13 @@ public class AvatarService {
     }
 
     private Optional<Avatar> draft(User user) {
-        return avatars.findFirstByUserIdAndStatusNot(user.getId(), Avatar.Status.ACTIVE);
+        return avatars.findFirstByUserIdAndStatusIn(user.getId(), Avatar.Status.DRAFT);
+    }
+
+    private Avatar requireFinished(User user, long avatarId) {
+        return avatars.findByIdAndUserId(avatarId, user.getId())
+            .filter(a -> Avatar.Status.FINISHED.contains(a.getStatus()))
+            .orElseThrow(() -> new NotFoundException("Avatar " + avatarId + " not found"));
     }
 
     private Avatar requireDraft(User user) {
@@ -190,12 +223,13 @@ public class AvatarService {
     }
 
     /**
-     * {@code /api/v1/avatar/{id}/files/{NAME}?v=...}: the version changes whenever the avatar does
-     * (a redrawn master), so browsers may cache each URL for good.
+     * {@code /api/v1/avatar/{id}/files/{NAME}?v=...}: a draft's version changes whenever it does (a
+     * redrawn master); a finished avatar's images never change. So browsers may cache each URL for good.
      */
     private Optional<String> url(Avatar avatar, String name) {
+        Instant version = Avatar.Status.FINISHED.contains(avatar.getStatus()) ? avatar.getCreatedAt() : avatar.getUpdatedAt();
         return storage.exists(avatar, name)
-            ? Optional.of("/api/v1/avatar/" + avatar.getId() + "/files/" + name + "?v=" + avatar.getUpdatedAt().toEpochMilli())
+            ? Optional.of("/api/v1/avatar/" + avatar.getId() + "/files/" + name + "?v=" + version.toEpochMilli())
             : Optional.empty();
     }
 }

@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -19,6 +20,7 @@ import java.time.ZoneId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -143,13 +145,70 @@ class AvatarIntegrationTest {
     }
 
     @Test
-    void aNewAvatarReplacesTheOldOne() throws Exception {
+    void aNewAvatarBecomesActiveAndTheOldOneStaysToPickFrom() throws Exception {
         JsonNode first = makeAvatar();
+        long firstId = first.at("/active/id").asLong();
         String oldFrame = first.at("/active/frames/NORMAL~1HAPPY").asText();
 
         JsonNode second = makeAvatar();
-        assertThat(second.at("/active/id").asLong()).isNotEqualTo(first.at("/active/id").asLong());
-        call(get(oldFrame)).andExpect(status().isNotFound());
+        long secondId = second.at("/active/id").asLong();
+        assertThat(secondId).isNotEqualTo(firstId);
+        call(get(oldFrame)).andExpect(status().isOk());
+        // newest first, the active one marked, each with a thumbnail
+        assertThat(second.at("/avatars").size()).isEqualTo(2);
+        assertThat(second.at("/avatars/0/id").asLong()).isEqualTo(secondId);
+        assertThat(second.at("/avatars/0/active").asBoolean()).isTrue();
+        assertThat(second.at("/avatars/1/active").asBoolean()).isFalse();
+        assertThat(second.at("/avatars/1/thumbnailUrl").asText()).contains("/" + firstId + "/files/NORMAL_NEUTRAL");
+    }
+
+    JsonNode select(Object id) throws Exception {
+        return body(call(put("/api/v1/avatar/active").contentType(MediaType.APPLICATION_JSON)
+            .content("{\"id\": " + id + "}")).andExpect(status().isOk()));
+    }
+
+    @Test
+    void switchingBetweenAvatarsAndTheBuiltInArt() throws Exception {
+        long firstId = makeAvatar().at("/active/id").asLong();
+        makeAvatar();
+
+        JsonNode back = select(firstId);
+        assertThat(back.at("/active/id").asLong()).isEqualTo(firstId);
+        assertThat(back.at("/avatars/1/active").asBoolean()).isTrue();
+        assertThat(back.at("/avatars/0/active").asBoolean()).isFalse();
+
+        JsonNode builtIn = select(null);
+        assertThat(builtIn.at("/active").isNull()).isTrue();
+        assertThat(builtIn.at("/avatars").size()).isEqualTo(2);
+        assertThat(images.calls).hasSize(2 * (1 + FRAMES_AFTER_MASTER)); // switching draws nothing
+    }
+
+    @Test
+    void deletingAnAvatarRemovesItsImages() throws Exception {
+        JsonNode first = makeAvatar();
+        long firstId = first.at("/active/id").asLong();
+        String firstFrame = first.at("/active/frames/NORMAL~1HAPPY").asText();
+        long secondId = makeAvatar().at("/active/id").asLong();
+
+        call(delete("/api/v1/avatar/" + firstId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.avatars.length()").value(1))
+            .andExpect(jsonPath("$.active.id").value(secondId));
+        call(get(firstFrame)).andExpect(status().isNotFound());
+
+        // deleting the active one falls back to the built-in art
+        call(delete("/api/v1/avatar/" + secondId))
+            .andExpect(jsonPath("$.active").value(nullValue()))
+            .andExpect(jsonPath("$.avatars.length()").value(0));
+        call(delete("/api/v1/avatar/" + secondId)).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void aDraftCanNotBeSelectedOrDeletedAsAnAvatar() throws Exception {
+        long draftId = body(upload(JPEG)).at("/draft/id").asLong();
+        call(put("/api/v1/avatar/active").contentType(MediaType.APPLICATION_JSON).content("{\"id\": " + draftId + "}"))
+            .andExpect(status().isNotFound());
+        call(delete("/api/v1/avatar/" + draftId)).andExpect(status().isNotFound());
     }
 
     @Test
@@ -203,8 +262,11 @@ class AvatarIntegrationTest {
         users.save(new User("other@test.local", "Other", ZoneId.of("Europe/Berlin"), 4, clock.instant()));
 
         call(get(frame), "other@test.local").andExpect(status().isNotFound());
+        long mine = body(call(get("/api/v1/avatar"))).at("/active/id").asLong();
+        call(delete("/api/v1/avatar/" + mine), "other@test.local").andExpect(status().isNotFound());
         call(get("/api/v1/avatar"), "other@test.local")
             .andExpect(jsonPath("$.active").value(nullValue()))
+            .andExpect(jsonPath("$.avatars.length()").value(0))
             .andExpect(jsonPath("$.draft").value(nullValue()));
     }
 
